@@ -20,28 +20,68 @@ interface ItemCardProps {
 const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemCardProps) => {
   const params = useParams();
   const billId = params.billId as string;
-  const { bill, addConsumption, removeConsumption } = useBill(billId);
+  const { bill, addConsumption, updateConsumption, removeConsumption } = useBill(billId);
   const [showOptions, setShowOptions] = useState(false);
 
-  const getConsumingParticipants = (): string[] => {
-    if (!bill) return [];
-    return bill.consumptions
-      .filter((c) => c.itemId === item.id && (c.quantity || 0) > 0)
-      .map((c) => c.participantId);
+  const getCurrentQuantity = (participantId: string): number => {
+    if (!bill) return 0;
+    const consumption = bill.consumptions.find(
+      (c) => c.participantId === participantId && c.itemId === item.id
+    );
+    return consumption?.quantity || 0;
   };
 
-  const consumingParticipants = getConsumingParticipants();
+  const handleIncrease = async (participantId: string) => {
+    if (!bill) return;
 
-  const handleParticipantToggle = async (participantId: string, checked: boolean) => {
+    const currentQuantity = getCurrentQuantity(participantId);
+    const newQuantity = currentQuantity + 1;
+
+    try {
+      if (currentQuantity === 0) {
+        // Quando está em 0 e clica no +, vai direto para 2
+        await addConsumption({ participantId, itemId: item.id, quantity: 2 });
+      } else if (currentQuantity === 1) {
+        // Quando está em 1 e clica no +, vai para 2
+        await updateConsumption({ participantId, itemId: item.id, quantity: 2 });
+      } else {
+        // Atualizar consumo existente
+        await updateConsumption({ participantId, itemId: item.id, quantity: newQuantity });
+      }
+    } catch (error) {
+      // Erro já tratado no hook
+    }
+  };
+
+  const handleCheckboxToggle = async (participantId: string, checked: boolean) => {
     if (!bill) return;
 
     try {
       if (checked) {
-        // Adicionar consumo (quantidade padrão 1)
+        // Marcar checkbox = adicionar consumo com quantidade 1
         await addConsumption({ participantId, itemId: item.id, quantity: 1 });
       } else {
-        // Remover consumo
+        // Desmarcar checkbox = remover consumo
         await removeConsumption({ participantId, itemId: item.id });
+      }
+    } catch (error) {
+      // Erro já tratado no hook
+    }
+  };
+
+  const handleDecrease = async (participantId: string) => {
+    if (!bill) return;
+
+    const currentQuantity = getCurrentQuantity(participantId);
+    const newQuantity = currentQuantity - 1;
+
+    try {
+      if (newQuantity <= 0) {
+        // Remover consumo se chegar a zero ou negativo
+        await removeConsumption({ participantId, itemId: item.id });
+      } else {
+        // Atualizar consumo existente
+        await updateConsumption({ participantId, itemId: item.id, quantity: newQuantity });
       }
     } catch (error) {
       // Erro já tratado no hook
@@ -90,24 +130,107 @@ const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemC
                   {participants.length === 0 ? (
                     <p className="text-sm text-gray-500 py-2">Nenhum participante</p>
                   ) : (
-                    <div className="space-y-1">
-                      {participants.map((participant) => {
-                        const isConsuming = consumingParticipants.includes(participant.userId);
-                        return (
-                          <label
-                            key={participant.userId}
-                            className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isConsuming}
-                              onChange={(e) => handleParticipantToggle(participant.userId, e.target.checked)}
-                              className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                            />
-                            <span className="text-sm text-gray-700">{participant.name}</span>
-                          </label>
+                    <div className="space-y-2">
+                      {(() => {
+                        // Verificar se algum participante tem quantidade >= 2 para determinar o modo global
+                        const hasAnyQuantityAboveOne = participants.some(
+                          (p) => getCurrentQuantity(p.userId) >= 2
                         );
-                      })}
+                        const showCheckboxMode = !hasAnyQuantityAboveOne;
+
+                        return participants.map((participant) => {
+                          const quantity = getCurrentQuantity(participant.userId);
+
+                          return (
+                            <div
+                              key={participant.userId}
+                              className="flex items-center justify-between gap-2 hover:bg-gray-50 p-2 rounded"
+                            >
+                              <span className="text-sm text-gray-700 flex-1">{participant.name}</span>
+                              <div className="flex items-center gap-2">
+                                {showCheckboxMode ? (
+                                  <>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={quantity === 1}
+                                        onChange={(e) => handleCheckboxToggle(participant.userId, e.target.checked)}
+                                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                                      />
+                                    </label>
+                                    <button
+                                      onClick={() => handleIncrease(participant.userId)}
+                                      disabled={quantity >= item.quantity}
+                                      className="w-6 h-6 flex items-center justify-center rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+                                      aria-label="Aumentar quantidade"
+                                    >
+                                      <svg
+                                        className="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M12 4v16m8-8H4"
+                                        />
+                                      </svg>
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => handleDecrease(participant.userId)}
+                                      disabled={quantity === 0}
+                                      className="w-6 h-6 flex items-center justify-center rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+                                      aria-label="Diminuir quantidade"
+                                    >
+                                      <svg
+                                        className="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M20 12H4"
+                                        />
+                                      </svg>
+                                    </button>
+                                    <span className="text-sm font-medium text-gray-900 min-w-[24px] text-center">
+                                      {quantity}
+                                    </span>
+                                    <button
+                                      onClick={() => handleIncrease(participant.userId)}
+                                      disabled={quantity >= item.quantity}
+                                      className="w-6 h-6 flex items-center justify-center rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+                                      aria-label="Aumentar quantidade"
+                                    >
+                                      <svg
+                                        className="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M12 4v16m8-8H4"
+                                        />
+                                      </svg>
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
                     </div>
                   )}
                 </div>
