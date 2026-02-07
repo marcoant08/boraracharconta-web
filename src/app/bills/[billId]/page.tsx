@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useBill } from '@/hooks/useBill';
 import { useBillStore } from '@/store/bill.store';
 import { BillTabs } from '@/components/bills/BillTabs';
+import { ConnectionIndicator } from '@/components/bills/ConnectionIndicator';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatCode } from '@/utils/format';
@@ -73,7 +74,8 @@ export default function BillPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white shadow">
+      <ConnectionIndicator billId={billId} />
+      <header className="bg-white shadow sticky top-3.5 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>

@@ -115,13 +115,25 @@ const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemC
             </>
           )}
           {isVerifiedParticipant && (
-            <Button
-              variant="danger"
-              size="sm"
+            <button
               onClick={() => onRemove(item.id)}
+              className="p-1 hover:bg-red-100 rounded transition-colors text-red-600 hover:text-red-700"
+              aria-label="Remover item"
             >
-              Remover
-            </Button>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           )}
         </div>
       </div>

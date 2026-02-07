@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '@/store/auth.store';
+import { useWebSocketStore } from '@/store/websocket.store';
 import toast from 'react-hot-toast';
 
 // Singleton para manter uma única instância do socket
@@ -12,6 +13,7 @@ export const useWebSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const { token } = useAuthStore();
+  const setGlobalConnected = useWebSocketStore((state) => state.setConnected);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -28,6 +30,7 @@ export const useWebSocket = () => {
           isConnecting = false;
           setSocket(null);
           setConnected(false);
+          setGlobalConnected(false);
         }
       }
       return () => {
@@ -39,6 +42,7 @@ export const useWebSocket = () => {
     if (socketInstance && socketInstance.connected) {
       setSocket(socketInstance);
       setConnected(true);
+      setGlobalConnected(true);
       connectionCount++;
       return () => {
         connectionCount--;
@@ -59,6 +63,7 @@ export const useWebSocket = () => {
         if (mountedRef.current) {
           setSocket(socketInstance);
           setConnected(true);
+          setGlobalConnected(true);
         }
       };
 
@@ -99,12 +104,14 @@ export const useWebSocket = () => {
         if (mountedRef.current) {
           setSocket(newSocket);
           setConnected(true);
+          setGlobalConnected(true);
         }
       };
 
       const handleDisconnect = (reason: string) => {
         if (mountedRef.current) {
           setConnected(false);
+          setGlobalConnected(false);
         }
         // Se foi desconexão forçada, limpar instância
         if (reason === 'io server disconnect' || reason === 'io client disconnect') {
@@ -145,6 +152,7 @@ export const useWebSocket = () => {
           isConnecting = false;
           setSocket(null);
           setConnected(false);
+          setGlobalConnected(false);
         }
       };
     }
@@ -152,7 +160,7 @@ export const useWebSocket = () => {
     return () => {
       mountedRef.current = false;
     };
-  }, [token]);
+  }, [token, setGlobalConnected]);
 
   const joinBill = useCallback(
     (billId: string) => {
