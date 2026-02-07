@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useBill } from '@/hooks/useBill';
-import { useAuthStore } from '@/store/auth.store';
 import { useBillStore } from '@/store/bill.store';
 import { BillTabs } from '@/components/bills/BillTabs';
 import { Button } from '@/components/ui/Button';
@@ -16,7 +15,6 @@ export default function BillPage() {
   const router = useRouter();
   const billId = params.billId as string;
   const { bill, loading, error } = useBill(billId);
-  const user = useAuthStore((state) => state.user);
   const clearBill = useBillStore((state) => state.clearBill);
 
   // Limpar store ao sair da página (apenas na desmontagem)
