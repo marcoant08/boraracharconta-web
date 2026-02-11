@@ -59,7 +59,6 @@ export const ConsumptionsTab = () => {
               key={item.id}
               item={item}
               participant={participant}
-              participants={bill.participants}
             />
           ))}
         </div>

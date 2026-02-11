@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { useBill } from '@/hooks/useBill';
 import { useAuthStore } from '@/store/auth.store';
 import { AddItemForm } from './AddItemForm';
@@ -15,22 +15,30 @@ interface ItemCardProps {
   onRemove: (itemId: string) => void;
 }
 
-const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemCardProps) => {
+const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: ItemCardProps) => {
   const params = useParams();
   const billId = params.billId as string;
   const { bill, addConsumption, removeConsumption } = useBill(billId);
   const [showDetails, setShowDetails] = useState(false);
   const [iconIndex, setIconIndex] = useState(Math.floor(Math.random() * 4));
 
-  const getCurrentQuantity = (participantId: string): number => {
-    if (!bill) return 0;
-    const consumption = bill.consumptions.find(
-      (c) => c.participantId === participantId && c.itemId === item.id
-    );
-    return consumption?.quantity || 0;
-  };
+  // Criar mapa de consumos para busca O(1) em vez de O(n) para cada participante
+  const consumptionMap = useMemo(() => {
+    if (!bill?.consumptions) return new Map<string, number>();
+    const map = new Map<string, number>();
+    bill.consumptions.forEach((c) => {
+      if (c.itemId === item.id) {
+        map.set(c.participantId, c.quantity);
+      }
+    });
+    return map;
+  }, [bill?.consumptions, item.id]);
 
-  const handleCheckboxToggle = async (participantId: string, checked: boolean) => {
+  const getCurrentQuantity = useCallback((participantId: string): number => {
+    return consumptionMap.get(participantId) || 0;
+  }, [consumptionMap]);
+
+  const handleCheckboxToggle = useCallback(async (participantId: string, checked: boolean) => {
     if (!bill) return;
 
     try {
@@ -44,13 +52,13 @@ const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemC
     } catch (error) {
       // Erro já tratado no hook
     }
-  };
+  }, [bill, item.id, addConsumption, removeConsumption]);
 
-  const changeIcon = () => {
+  const changeIcon = useCallback(() => {
     setIconIndex((i) => (i >= 3 ? 0 : i + 1));
-  };
+  }, []);
 
-  const icons = [
+  const icons = useMemo(() => [
     <svg key="beer" className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
       <path d="M20 6h-2V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM8 4h8v2H8V4zm12 14H4V8h16v10z"/>
     </svg>,
@@ -64,9 +72,7 @@ const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemC
     <svg key="cheers" className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
       <path d="M5 2c0 .55.45 1 1 1h12c.55 0 1-.45 1-1s-.45-1-1-1H6c-.55 0-1 .45-1 1zm2.08 4c.48-.6 1.18-1 2-1s1.52.4 2 1l1.7 2.26L12.25 8l1.45 1.92L14.33 8H19c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V8c0-1.1.9-2 2-2h2.08zM7 10v8h10v-8H7z"/>
     </svg>,
-  ];
-
-  const itemActors = participants.filter((p) => getCurrentQuantity(p.userId) > 0);
+  ], []);
 
   return (
     <div className="">
@@ -134,13 +140,7 @@ const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemC
                 return (
                   <div
                     key={participant.userId}
-                    onClick={() => {
-                      if (isSelected) {
-                        handleCheckboxToggle(participant.userId, false);
-                      } else {
-                        handleCheckboxToggle(participant.userId, true);
-                      }
-                    }}
+                    onClick={() => handleCheckboxToggle(participant.userId, !isSelected)}
                     className="flex gap-2 items-center ml-6 w-fit cursor-pointer hover:opacity-70 transition-opacity"
                   >
                     <input
@@ -159,7 +159,7 @@ const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemC
       )}
     </div>
   );
-};
+});
 
 export const ItemsTab = () => {
   const params = useParams();

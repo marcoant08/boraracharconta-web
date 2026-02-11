@@ -1,32 +1,37 @@
 'use client';
 
+import { useMemo, useCallback, memo } from 'react';
 import { useBill } from '@/hooks/useBill';
 import { BillItemDto, ParticipantDto } from '@/types/bill.types';
-import { formatCurrency } from '@/utils/format';
 import { useParams } from 'next/navigation';
 
 interface ConsumptionItemProps {
   item: BillItemDto;
   participant: ParticipantDto;
-  participants: ParticipantDto[];
 }
 
-export const ConsumptionItem = ({ item, participant, participants }: ConsumptionItemProps) => {
+export const ConsumptionItem = memo(({ item, participant }: ConsumptionItemProps) => {
   const params = useParams();
   const billId = params.billId as string;
   const { bill, addConsumption, removeConsumption } = useBill(billId);
 
-  const getCurrentQuantity = (participantId: string): number => {
-    const consumption = bill?.consumptions.find(
-      (c) => c.participantId === participantId && c.itemId === item.id
-    );
-    return consumption?.quantity || 0;
-  };
+  // Criar mapa de consumos para busca O(1) em vez de O(n)
+  const consumptionMap = useMemo(() => {
+    if (!bill?.consumptions) return new Map<string, number>();
+    const map = new Map<string, number>();
+    bill.consumptions.forEach((c) => {
+      if (c.itemId === item.id) {
+        map.set(c.participantId, c.quantity);
+      }
+    });
+    return map;
+  }, [bill?.consumptions, item.id]);
 
-  const isSelected = getCurrentQuantity(participant.userId) > 0;
-  const actorsPerItem = participants.filter((p) => getCurrentQuantity(p.userId) > 0);
+  const isSelected = useMemo(() => {
+    return (consumptionMap.get(participant.userId) || 0) > 0;
+  }, [consumptionMap, participant.userId]);
 
-  const handleSelect = async () => {
+  const handleSelect = useCallback(async () => {
     if (!bill) return;
     try {
       if (isSelected) {
@@ -37,7 +42,7 @@ export const ConsumptionItem = ({ item, participant, participants }: Consumption
     } catch (error) {
       // Erro já tratado no hook
     }
-  };
+  }, [bill, isSelected, participant.userId, item.id, removeConsumption, addConsumption]);
 
   return (
     <button
@@ -53,4 +58,4 @@ export const ConsumptionItem = ({ item, participant, participants }: Consumption
       <span className="text-gray-900">{item.name}</span>
     </button>
   );
-};
+});
