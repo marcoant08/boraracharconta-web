@@ -27,8 +27,14 @@ export const ParticipantsTab = () => {
   };
 
   const canRemoveParticipant = (participant: typeof bill.participants[0]) => {
-    if (isAdmin) return true;
-    if (isVerifiedParticipant && isVisitor(participant)) return true;
+    // Admin: pode remover a todos, menos si mesmo
+    if (isAdmin) {
+      return participant.userId !== user?.id;
+    }
+    // Usuário comum: pode remover apenas visitantes
+    if (isVerifiedParticipant && isVisitor(participant)) {
+      return true;
+    }
     return false;
   };
 
@@ -55,9 +61,9 @@ export const ParticipantsTab = () => {
                       Admin
                     </span>
                   )}
-                  {isVisitor(participant) && (
-                    <span className="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded">
-                      Visitante
+                  {!isVisitor(participant) && bill.adminId !== participant.userId && (
+                    <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded">
+                      Autenticado
                     </span>
                   )}
                 </div>
