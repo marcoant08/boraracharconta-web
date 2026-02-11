@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useBill } from '@/hooks/useBill';
 import { useBillStore } from '@/store/bill.store';
+import { useWebSocket } from '@/hooks/useWebSocket';
 import { BillTabs } from '@/components/bills/BillTabs';
-import { ConnectionIndicator } from '@/components/bills/ConnectionIndicator';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatCode } from '@/utils/format';
@@ -17,6 +17,9 @@ export default function BillPage() {
   const billId = params.billId as string;
   const { bill, loading, error } = useBill(billId);
   const clearBill = useBillStore((state) => state.clearBill);
+  const { socket, connected, reconnect } = useWebSocket();
+  const [isInRoom, setIsInRoom] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
 
   // Limpar store ao sair da página (apenas na desmontagem)
   useEffect(() => {
@@ -27,11 +30,75 @@ export default function BillPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Escutar eventos de conexão do socket diretamente
+  useEffect(() => {
+    if (!socket) {
+      setSocketConnected(false);
+      return;
+    }
+
+    const handleConnect = () => {
+      setSocketConnected(true);
+    };
+
+    const handleDisconnect = () => {
+      setSocketConnected(false);
+    };
+
+    // Verificar estado inicial
+    setSocketConnected(socket.connected);
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+    };
+  }, [socket]);
+
+  // Verificar status de conexão
+  useEffect(() => {
+    if (!socket || !billId) {
+      setIsInRoom(false);
+      return;
+    }
+
+    const checkConnection = () => {
+      setIsInRoom(socket.connected && connected);
+    };
+
+    checkConnection();
+
+    const handleConnect = () => {
+      setIsInRoom(true);
+    };
+
+    const handleDisconnect = () => {
+      setIsInRoom(false);
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+    };
+  }, [socket, connected, billId]);
+
+  const isWebSocketConnected = socketConnected;
+
   const copyInviteLink = () => {
     if (!bill) return;
     const url = `${window.location.origin}/bills/join?code=${bill.code}`;
     navigator.clipboard.writeText(url);
     toast.success('Link copiado para a área de transferência!');
+  };
+
+  const handleReconnect = () => {
+    reconnect();
+    toast.success('Tentando reconectar...');
   };
 
   // Mostrar loader apenas se estiver carregando E não tiver bill ainda
@@ -74,8 +141,7 @@ export default function BillPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <ConnectionIndicator billId={billId} />
-      <header className="bg-white shadow sticky top-3.5 z-40">
+      <header className="bg-white shadow sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
@@ -85,6 +151,11 @@ export default function BillPage() {
               </p>
             </div>
             <div className="flex gap-4">
+              {!isWebSocketConnected && (
+                <Button variant="primary" onClick={handleReconnect}>
+                  Reconectar
+                </Button>
+              )}
               <Button variant="secondary" onClick={copyInviteLink}>
                 Copiar Link de Convite
               </Button>

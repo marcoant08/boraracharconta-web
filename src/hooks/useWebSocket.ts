@@ -190,10 +190,26 @@ export const useWebSocket = () => {
     [socket]
   );
 
+  const reconnect = useCallback(() => {
+    const currentSocket = socket || socketInstance;
+    if (currentSocket) {
+      // Se o socket existe mas não está conectado, tentar conectar
+      if (!currentSocket.connected) {
+        currentSocket.connect();
+      } else {
+        // Se já está conectado, desconectar e reconectar para forçar uma nova conexão
+        currentSocket.disconnect();
+        currentSocket.connect();
+      }
+    }
+    // Se não existe socket, o useEffect vai criar um novo automaticamente
+  }, [socket]);
+
   return {
     socket: socket || socketInstance,
     connected,
     joinBill,
     leaveBill,
+    reconnect,
   };
 };
