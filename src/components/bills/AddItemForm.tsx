@@ -1,89 +1,154 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useRef, useState } from 'react';
 import { useBill } from '@/hooks/useBill';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { capitalize, formatCurrency } from '@/utils/format';
 import { useParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 
-const addItemSchema = z.object({
-  name: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres'),
-  value: z.number().min(0.01, 'Valor deve ser maior que zero'),
-  quantity: z.number().int().min(1, 'Quantidade deve ser no mínimo 1'),
-  category: z.string().min(1, 'Categoria é obrigatória'),
-});
-
-type AddItemFormData = z.infer<typeof addItemSchema>;
+interface ItemFormState {
+  name: string;
+  price: number;
+  quantity: number;
+  category: string;
+}
 
 export const AddItemForm = () => {
   const params = useParams();
   const billId = params.billId as string;
-  const { addItem } = useBill(billId);
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<AddItemFormData>({
-    resolver: zodResolver(addItemSchema),
-  });
+  const { bill, addItem } = useBill(billId);
+  const [item, setItem] = useState<ItemFormState>({ name: '', price: 0, quantity: 0, category: 'Geral' });
+  const [quantityFocused, setQuantityFocused] = useState(false);
+  const nameRef = useRef<HTMLInputElement | null>(null);
+  const priceRef = useRef<HTMLInputElement | null>(null);
+  const quantityRef = useRef<HTMLInputElement | null>(null);
 
-  const onSubmit = async (data: AddItemFormData) => {
+  const formatMoney = (value: number): string => {
+    return formatCurrency(value).replace('R$', '').trim();
+  };
+
+  const parseMoney = (value: string): number => {
+    const digits = value.replace(/\D/g, '');
+    return Number(digits) / 100;
+  };
+
+  const onAddItem = async () => {
+    const _name = capitalize(item.name.trim());
+    if (_name.length === 0) {
+      nameRef.current?.focus();
+      return toast.error('Digite o nome do item');
+    }
+
+    if (item.price <= 0) {
+      priceRef.current?.focus();
+      return toast.error('Adicione o preço do item');
+    }
+
+    if (item.quantity < 1) {
+      quantityRef.current?.focus();
+      return toast.error('Adicione a quantidade de itens');
+    }
+
+    if (bill?.items.some((i) => i.name.toLowerCase() === _name.toLowerCase())) {
+      return toast.error(`Item '${_name}' já adicionado`);
+    }
+
     try {
       await addItem({
-        name: data.name,
-        value: data.value,
-        quantity: data.quantity,
-        category: data.category,
+        name: _name,
+        value: item.price,
+        quantity: item.quantity,
+        category: item.category || 'Geral',
       });
-      reset();
+      setItem({ name: '', price: 0, quantity: 0, category: 'Geral' });
+      toast.success('Item adicionado');
+      nameRef.current?.focus();
     } catch (error) {
       // Erro já tratado no hook
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <Input
-        label="Nome do Item"
-        type="text"
-        placeholder="Ex: Pizza Margherita"
-        {...register('name')}
-        error={errors.name?.message}
-      />
-
-      <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="Valor Unitário"
-          type="number"
-          step="0.01"
-          placeholder="0.00"
-          {...register('value', { valueAsNumber: true })}
-          error={errors.value?.message}
+    <>
+      <div className="flex justify-center items-end gap-3 pt-3">
+        <input
+          ref={priceRef}
+          type="text"
+          value={formatMoney(item.price)}
+          onChange={(e) => {
+            const price = parseMoney(e.target.value);
+            setItem({ ...item, price });
+          }}
+          onKeyUp={(e) => {
+            if (['Enter', 'NumpadEnter'].includes(e.code)) onAddItem();
+          }}
+          className="text-5xl text-center border-b-2 border-gray-400 bg-transparent outline-none py-2 max-w-80 text-gray-900"
+          style={{ width: `${formatMoney(item.price).length * 16 + 90}px` }}
+          placeholder="R$ 0,00"
+          inputMode="decimal"
         />
-
-        <Input
-          label="Quantidade"
-          type="number"
-          placeholder="1"
-          {...register('quantity', { valueAsNumber: true })}
-          error={errors.quantity?.message}
-        />
+        <div
+          className={`flex text-2xl px-1 rounded-md ${
+            quantityFocused && 'border-2 border-gray-400 animate-pulse'
+          }`}
+        >
+          <label htmlFor="bill-quantity" className="text-gray-900">
+            x{item.quantity}
+          </label>
+          <input
+            id="bill-quantity"
+            ref={quantityRef}
+            value={item.quantity}
+            inputMode="decimal"
+            onFocus={() => {
+              toast('Digite a quantidade', { icon: 'ℹ️' });
+              setQuantityFocused(true);
+            }}
+            onKeyUp={(e) => {
+              if (['Enter', 'NumpadEnter'].includes(e.code)) onAddItem();
+            }}
+            onBlur={() => setQuantityFocused(false)}
+            maxLength={5}
+            onChange={(e) => {
+              const quantity = Number(e.target.value.replace(/\D/gi, '')) || 0;
+              setItem({ ...item, quantity });
+            }}
+            className="w-0 outline-none bg-transparent text-gray-900"
+          />
+        </div>
       </div>
 
-      <Input
-        label="Categoria"
-        type="text"
-        placeholder="Ex: Bebida, Comida, etc."
-        {...register('category')}
-        error={errors.category?.message}
-      />
-
-      <Button type="submit" variant="primary" loading={isSubmitting}>
-        Adicionar Item
-      </Button>
-    </form>
+      <div className="flex gap-5 w-full justify-between pt-5">
+        <input
+          ref={nameRef}
+          type="text"
+          placeholder="Digite o nome..."
+          value={item.name}
+          onChange={(e) => setItem({ ...item, name: e.target.value })}
+          onKeyUp={(e) => {
+            if (['Enter', 'NumpadEnter'].includes(e.code)) onAddItem();
+          }}
+          className="bg-white w-full rounded-full shadow-md p-4 outline-none disabled:bg-gray-300 text-gray-900 placeholder-gray-500"
+        />
+        <button
+          onClick={onAddItem}
+          className="bg-primary-500 shadow-lg p-4 justify-center items-center rounded-full flex ml-auto hover:opacity-90 transition-opacity"
+        >
+          <svg
+            className="w-5 h-5 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+        </button>
+      </div>
+    </>
   );
 };

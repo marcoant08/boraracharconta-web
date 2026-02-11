@@ -22,3 +22,8 @@ export const formatCode = (code: string): string => {
   }
   return code;
 };
+
+export const capitalize = (text: string): string => {
+  if (!text) return '';
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+};

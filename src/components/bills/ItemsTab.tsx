@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { useBill } from '@/hooks/useBill';
 import { useAuthStore } from '@/store/auth.store';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { AddItemForm } from './AddItemForm';
 import { formatCurrency } from '@/utils/format';
 import { useParams } from 'next/navigation';
@@ -20,8 +18,9 @@ interface ItemCardProps {
 const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemCardProps) => {
   const params = useParams();
   const billId = params.billId as string;
-  const { bill, addConsumption, updateConsumption, removeConsumption } = useBill(billId);
-  const [showOptions, setShowOptions] = useState(false);
+  const { bill, addConsumption, removeConsumption } = useBill(billId);
+  const [showDetails, setShowDetails] = useState(false);
+  const [iconIndex, setIconIndex] = useState(Math.floor(Math.random() * 4));
 
   const getCurrentQuantity = (participantId: string): number => {
     if (!bill) return 0;
@@ -29,28 +28,6 @@ const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemC
       (c) => c.participantId === participantId && c.itemId === item.id
     );
     return consumption?.quantity || 0;
-  };
-
-  const handleIncrease = async (participantId: string) => {
-    if (!bill) return;
-
-    const currentQuantity = getCurrentQuantity(participantId);
-    const newQuantity = currentQuantity + 1;
-
-    try {
-      if (currentQuantity === 0) {
-        // Quando está em 0 e clica no +, vai direto para 2
-        await addConsumption({ participantId, itemId: item.id, quantity: 2 });
-      } else if (currentQuantity === 1) {
-        // Quando está em 1 e clica no +, vai para 2
-        await updateConsumption({ participantId, itemId: item.id, quantity: 2 });
-      } else {
-        // Atualizar consumo existente
-        await updateConsumption({ participantId, itemId: item.id, quantity: newQuantity });
-      }
-    } catch (error) {
-      // Erro já tratado no hook
-    }
   };
 
   const handleCheckboxToggle = async (participantId: string, checked: boolean) => {
@@ -69,37 +46,66 @@ const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemC
     }
   };
 
-  const handleDecrease = async (participantId: string) => {
-    if (!bill) return;
-
-    const currentQuantity = getCurrentQuantity(participantId);
-    const newQuantity = currentQuantity - 1;
-
-    try {
-      if (newQuantity <= 0) {
-        // Remover consumo se chegar a zero ou negativo
-        await removeConsumption({ participantId, itemId: item.id });
-      } else {
-        // Atualizar consumo existente
-        await updateConsumption({ participantId, itemId: item.id, quantity: newQuantity });
-      }
-    } catch (error) {
-      // Erro já tratado no hook
-    }
+  const changeIcon = () => {
+    setIconIndex((i) => (i >= 3 ? 0 : i + 1));
   };
 
+  const icons = [
+    <svg key="beer" className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M20 6h-2V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM8 4h8v2H8V4zm12 14H4V8h16v10z"/>
+    </svg>,
+    <svg key="pizza" className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+    </svg>,
+    <svg key="orange" className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10"/>
+      <circle cx="12" cy="12" r="6" fill="white" opacity="0.3"/>
+    </svg>,
+    <svg key="cheers" className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M5 2c0 .55.45 1 1 1h12c.55 0 1-.45 1-1s-.45-1-1-1H6c-.55 0-1 .45-1 1zm2.08 4c.48-.6 1.18-1 2-1s1.52.4 2 1l1.7 2.26L12.25 8l1.45 1.92L14.33 8H19c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V8c0-1.1.9-2 2-2h2.08zM7 10v8h10v-8H7z"/>
+    </svg>,
+  ];
+
+  const itemActors = participants.filter((p) => getCurrentQuantity(p.userId) > 0);
+
   return (
-    <div className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow relative">
-      <div className="flex justify-between items-start mb-2">
-        <h4 className="font-semibold text-gray-900 flex-1">{item.name}</h4>
-        <div className="flex gap-2 relative">
+    <div className="">
+      <div className="bg-white rounded-full px-3 py-2 shadow-sm flex">
+        <div className="flex items-center gap-3 px-3 flex-1 min-w-0">
+          <div onClick={changeIcon} className="cursor-pointer">{icons[iconIndex] || icons[0]}</div>
+          <span className="text-xl text-gray-900">x{item.quantity}</span>
+          <div onClick={() => setShowDetails((d) => !d)} className="flex-1 min-w-0 cursor-pointer">
+            <h1 className="truncate text-lg text-ellipsis font-semibold max-w-36 min-[400px]:max-w-44 md:max-w-80 text-gray-900">
+              {item.name}
+            </h1>
+            <span className="text-sm text-gray-600">{formatCurrency(item.value)}</span>
+          </div>
+        </div>
+        <button
+          className="py-2 px-2 flex items-center justify-center w-10 cursor-pointer"
+          onClick={() => setShowDetails((d) => !d)}
+        >
+          <svg
+            className={`w-5 h-5 text-gray-800 transition-transform ${showDetails ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+        {isVerifiedParticipant && (
           <button
-            onClick={() => setShowOptions(!showOptions)}
-            className="p-1 hover:bg-gray-100 rounded transition-colors relative z-10"
-            aria-label="Mostrar opções"
+            onClick={() => onRemove(item.id)}
+            className="py-2 px-2 flex items-center justify-center w-10 cursor-pointer hover:opacity-70 transition-opacity"
           >
             <svg
-              className={`w-5 h-5 text-gray-600 transition-transform ${showOptions ? 'rotate-180' : ''}`}
+              className="w-5 h-5 text-gray-700"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -108,169 +114,49 @@ const ItemCard = ({ item, participants, isVerifiedParticipant, onRemove }: ItemC
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M19 9l-7 7-7-7"
+                d="M6 18L18 6M6 6l12 12"
               />
             </svg>
           </button>
-          {showOptions && (
+        )}
+      </div>
+
+      {showDetails && (
+        <div className="py-2 px-6 flex flex-col gap-1">
+          {!participants.length ? (
+            <h1 className="text-center text-gray-600">⚠️ Adicione pessoas</h1>
+          ) : (
             <>
-              {/* Overlay para fechar ao clicar fora */}
-              <div
-                className="fixed inset-0 z-20"
-                onClick={() => setShowOptions(false)}
-              />
-              {/* Popup dropdown */}
-              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 min-w-[200px] max-w-[300px]">
-                <div className="p-3 border-b border-gray-200">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Participantes que consumiram:
-                  </label>
-                </div>
-                <div className="max-h-48 overflow-y-auto p-2">
-                  {participants.length === 0 ? (
-                    <p className="text-sm text-gray-500 py-2">Nenhum participante</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {(() => {
-                        // Verificar se algum participante tem quantidade >= 2 para determinar o modo global
-                        const hasAnyQuantityAboveOne = participants.some(
-                          (p) => getCurrentQuantity(p.userId) >= 2
-                        );
-                        const showCheckboxMode = !hasAnyQuantityAboveOne;
-
-                        return participants.map((participant) => {
-                          const quantity = getCurrentQuantity(participant.userId);
-
-                          return (
-                            <div
-                              key={participant.userId}
-                              className="flex items-center justify-between gap-2 hover:bg-gray-50 p-2 rounded"
-                            >
-                              <span className="text-sm text-gray-700 flex-1">{participant.name}</span>
-                              <div className="flex items-center gap-2">
-                                {showCheckboxMode ? (
-                                  <>
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                      <input
-                                        type="checkbox"
-                                        checked={quantity === 1}
-                                        onChange={(e) => handleCheckboxToggle(participant.userId, e.target.checked)}
-                                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                                      />
-                                    </label>
-                                    <button
-                                      onClick={() => handleIncrease(participant.userId)}
-                                      disabled={quantity >= item.quantity}
-                                      className="w-6 h-6 flex items-center justify-center rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
-                                      aria-label="Aumentar quantidade"
-                                    >
-                                      <svg
-                                        className="w-4 h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M12 4v16m8-8H4"
-                                        />
-                                      </svg>
-                                    </button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <button
-                                      onClick={() => handleDecrease(participant.userId)}
-                                      disabled={quantity === 0}
-                                      className="w-6 h-6 flex items-center justify-center rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
-                                      aria-label="Diminuir quantidade"
-                                    >
-                                      <svg
-                                        className="w-4 h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M20 12H4"
-                                        />
-                                      </svg>
-                                    </button>
-                                    <span className="text-sm font-medium text-gray-900 min-w-[24px] text-center">
-                                      {quantity}
-                                    </span>
-                                    <button
-                                      onClick={() => handleIncrease(participant.userId)}
-                                      disabled={quantity >= item.quantity}
-                                      className="w-6 h-6 flex items-center justify-center rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
-                                      aria-label="Aumentar quantidade"
-                                    >
-                                      <svg
-                                        className="w-4 h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M12 4v16m8-8H4"
-                                        />
-                                      </svg>
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        });
-                      })()}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <span className="text-sm text-gray-600">⬆️ Consumo:</span>
+              {participants.map((participant) => {
+                const quantity = getCurrentQuantity(participant.userId);
+                const isSelected = quantity > 0;
+                return (
+                  <div
+                    key={participant.userId}
+                    onClick={() => {
+                      if (isSelected) {
+                        handleCheckboxToggle(participant.userId, false);
+                      } else {
+                        handleCheckboxToggle(participant.userId, true);
+                      }
+                    }}
+                    className="flex gap-2 items-center ml-6 w-fit cursor-pointer hover:opacity-70 transition-opacity"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {}}
+                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
+                    />
+                    <span className="text-sm text-gray-700">{participant.name}</span>
+                  </div>
+                );
+              })}
             </>
           )}
-          {isVerifiedParticipant && (
-            <button
-              onClick={() => onRemove(item.id)}
-              className="p-1 hover:bg-red-100 rounded transition-colors text-red-600 hover:text-red-700"
-              aria-label="Remover item"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
         </div>
-      </div>
-      <div className="space-y-1 text-sm text-gray-600">
-        <p>Valor unitário: {formatCurrency(item.value)}</p>
-        <p>Quantidade: {item.quantity}</p>
-        <p>Total: {formatCurrency(item.value * item.quantity)}</p>
-        <p>
-          <span className="px-2 py-1 bg-gray-100 rounded text-xs">
-            {item.category}
-          </span>
-        </p>
-      </div>
-
+      )}
     </div>
   );
 };
@@ -288,30 +174,33 @@ export const ItemsTab = () => {
   );
 
   return (
-    <div className="space-y-6">
-      {isVerifiedParticipant && (
-        <Card title="Adicionar Item">
-          <AddItemForm />
-        </Card>
+    <>
+      {isVerifiedParticipant && <AddItemForm />}
+
+      {bill.items.length === 0 ? (
+        <h1 className="text-xl py-5 text-center text-gray-900">
+          🍕 Adicione os itens
+        </h1>
+      ) : (
+        <h1 className="text-xl py-5 text-center text-gray-900">
+          {bill.items.length.toString().padStart(2, '0')} item adicionado
+          {bill.items.length > 1 && 's'}
+        </h1>
       )}
 
-      <Card title="Itens">
-        {bill.items.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">Nenhum item adicionado ainda.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {bill.items.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                participants={bill.participants}
-                isVerifiedParticipant={isVerifiedParticipant}
-                onRemove={removeItem}
-              />
-            ))}
-          </div>
-        )}
-      </Card>
-    </div>
+      {bill.items.length > 0 && (
+        <div className="flex flex-col gap-3">
+          {bill.items.map((item) => (
+            <ItemCard
+              key={item.id}
+              item={item}
+              participants={bill.participants}
+              isVerifiedParticipant={isVerifiedParticipant}
+              onRemove={removeItem}
+            />
+          )).reverse()}
+        </div>
+      )}
+    </>
   );
 };

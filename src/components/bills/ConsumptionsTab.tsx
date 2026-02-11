@@ -2,7 +2,6 @@
 
 import { useBill } from '@/hooks/useBill';
 import { useAuthStore } from '@/store/auth.store';
-import { Card } from '@/components/ui/Card';
 import { ConsumptionItem } from './ConsumptionItem';
 import { useParams } from 'next/navigation';
 
@@ -20,27 +19,51 @@ export const ConsumptionsTab = () => {
 
   if (!isVerifiedParticipant) {
     return (
-      <Card>
-        <p className="text-gray-500 text-center py-8">
-          Apenas participantes verificados podem gerenciar consumos.
-        </p>
-      </Card>
+      <h1 className="text-xl py-5 text-center text-gray-900">
+        Apenas participantes verificados podem gerenciar consumos.
+      </h1>
+    );
+  }
+
+  if (!bill.participants.length) {
+    return (
+      <h1 className="text-xl py-5 text-center text-gray-900">
+        👤 Informe as pessoas participantes
+      </h1>
+    );
+  }
+
+  if (!bill.items.length) {
+    return (
+      <h1 className="text-xl py-5 text-center text-gray-900">
+        🍕 Informe os itens consumidos
+      </h1>
     );
   }
 
   return (
-    <Card title="Consumos">
-      {bill.items.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">
-          Adicione itens primeiro para marcar consumos.
-        </p>
-      ) : (
-        <div className="space-y-6">
+    <div className="flex flex-col gap-2">
+      <h1 className="text-xl py-5 text-center text-gray-900">
+        Marque o consumo das pessoas ⬇️
+      </h1>
+      {bill.participants.map((participant) => (
+        <div key={participant.userId}>
+          <div className="flex gap-3 items-center mb-2">
+            <span className="whitespace-nowrap font-semibold text-gray-900">
+              {participant.name} 👤⬇️
+            </span>
+            <div className="h-0.5 w-full bg-gray-300" />
+          </div>
           {bill.items.map((item) => (
-            <ConsumptionItem key={item.id} item={item} participants={bill.participants} />
+            <ConsumptionItem
+              key={item.id}
+              item={item}
+              participant={participant}
+              participants={bill.participants}
+            />
           ))}
         </div>
-      )}
-    </Card>
+      ))}
+    </div>
   );
 };
