@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { BillResponseDto, BillItemDto } from '@/types/bill.types';
+import { BillResponseDto, BillItemDto, ParticipantDto, ConsumptionDto } from '@/types/bill.types';
 
 interface BillState {
   currentBill: BillResponseDto | null;
@@ -9,6 +9,11 @@ interface BillState {
   updateBill: (updates: Partial<BillResponseDto>) => void;
   addItem: (item: BillItemDto) => void;
   removeItem: (itemId: string) => void;
+  addParticipant: (participant: ParticipantDto) => void;
+  removeParticipant: (participantId: string) => void;
+  addConsumption: (consumption: ConsumptionDto) => void;
+  updateConsumption: (consumption: ConsumptionDto) => void;
+  removeConsumption: (participantId: string, itemId: string) => void;
   clearBill: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -62,6 +67,110 @@ export const useBillStore = create<BillState>((set) => ({
         currentBill: {
           ...state.currentBill,
           items: state.currentBill.items.filter((item) => item.id !== itemId),
+          // Também remover consumos relacionados a este item
+          consumptions: state.currentBill.consumptions.filter(
+            (c) => c.itemId !== itemId
+          ),
+        },
+      };
+    });
+  },
+
+  addParticipant: (participant: ParticipantDto) => {
+    set((state) => {
+      if (!state.currentBill) return state;
+      // Verificar se o participante já existe para evitar duplicatas
+      const participantExists = state.currentBill.participants.some(
+        (p) => p.userId === participant.userId
+      );
+      if (participantExists) return state;
+      
+      return {
+        currentBill: {
+          ...state.currentBill,
+          participants: [...state.currentBill.participants, participant],
+        },
+      };
+    });
+  },
+
+  removeParticipant: (participantId: string) => {
+    set((state) => {
+      if (!state.currentBill) return state;
+      
+      return {
+        currentBill: {
+          ...state.currentBill,
+          participants: state.currentBill.participants.filter(
+            (p) => p.userId !== participantId
+          ),
+          // Também remover consumos relacionados a este participante
+          consumptions: state.currentBill.consumptions.filter(
+            (c) => c.participantId !== participantId
+          ),
+        },
+      };
+    });
+  },
+
+  addConsumption: (consumption: ConsumptionDto) => {
+    set((state) => {
+      if (!state.currentBill) return state;
+      // Verificar se o consumo já existe
+      const consumptionExists = state.currentBill.consumptions.some(
+        (c) => c.participantId === consumption.participantId && c.itemId === consumption.itemId
+      );
+      if (consumptionExists) return state;
+      
+      return {
+        currentBill: {
+          ...state.currentBill,
+          consumptions: [...state.currentBill.consumptions, consumption],
+        },
+      };
+    });
+  },
+
+  updateConsumption: (consumption: ConsumptionDto) => {
+    set((state) => {
+      if (!state.currentBill) return state;
+      
+      const existingIndex = state.currentBill.consumptions.findIndex(
+        (c) => c.participantId === consumption.participantId && c.itemId === consumption.itemId
+      );
+      
+      if (existingIndex >= 0) {
+        // Atualizar consumo existente
+        return {
+          currentBill: {
+            ...state.currentBill,
+            consumptions: state.currentBill.consumptions.map((c, index) =>
+              index === existingIndex ? consumption : c
+            ),
+          },
+        };
+      } else {
+        // Adicionar novo consumo se não existir
+        return {
+          currentBill: {
+            ...state.currentBill,
+            consumptions: [...state.currentBill.consumptions, consumption],
+          },
+        };
+      }
+    });
+  },
+
+  removeConsumption: (participantId: string, itemId: string) => {
+    set((state) => {
+      if (!state.currentBill) return state;
+      
+      return {
+        currentBill: {
+          ...state.currentBill,
+          consumptions: state.currentBill.consumptions.filter(
+            (c) => !(c.participantId === participantId && c.itemId === itemId)
+          ),
         },
       };
     });
