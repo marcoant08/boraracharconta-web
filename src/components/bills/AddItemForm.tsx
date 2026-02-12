@@ -24,10 +24,11 @@ export const AddItemForm = () => {
   const quantityRef = useRef<HTMLInputElement | null>(null);
 
   const formatMoney = (value: number): string => {
-    return formatCurrency(value).replace('R$', '').trim();
+    return formatCurrency(value);
   };
 
   const parseMoney = (value: string): number => {
+    // Remove tudo exceto dígitos
     const digits = value.replace(/\D/g, '');
     return Number(digits) / 100;
   };
@@ -85,6 +86,12 @@ export const AddItemForm = () => {
           className="text-5xl text-center border-b-2 border-gray-400 bg-transparent outline-none py-2 max-w-80 text-gray-900"
           style={{ width: `${formatMoney(item.price).length * 16 + 90}px` }}
           placeholder="R$ 0,00"
+          onFocus={(e) => {
+            // Mover cursor para o final quando focar
+            setTimeout(() => {
+              e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+            }, 0);
+          }}
           inputMode="decimal"
         />
         <div
