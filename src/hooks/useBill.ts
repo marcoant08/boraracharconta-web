@@ -2,8 +2,6 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBillStore } from '@/store/bill.store';
 import { billService } from '@/services/bill.service';
-import { useWebSocket } from './useWebSocket';
-import { BillResponseDto } from '@/types/bill.types';
 import toast from 'react-hot-toast';
 
 export const useBill = (billId?: string) => {
@@ -14,15 +12,12 @@ export const useBill = (billId?: string) => {
   const setBill = useBillStore((state) => state.setBill);
   const setLoading = useBillStore((state) => state.setLoading);
   const setError = useBillStore((state) => state.setError);
-  const { socket, connected, joinBill, leaveBill } = useWebSocket();
-  const hasJoinedRef = useRef(false);
   const billIdRef = useRef<string | undefined>(billId);
   const fetchingRef = useRef<string | null>(null);
 
   // Atualizar ref quando billId mudar
   useEffect(() => {
     billIdRef.current = billId;
-    hasJoinedRef.current = false;
   }, [billId]);
 
   // Buscar conta quando billId mudar
@@ -72,47 +67,6 @@ export const useBill = (billId?: string) => {
     };
   }, [billId, router, setBill, setLoading, setError]);
 
-  // Conectar WebSocket quando billId estiver disponível
-  useEffect(() => {
-    if (!billId || !socket) return;
-
-    const currentBillId = billId;
-
-    // Aguardar conexão antes de entrar na room
-    const handleConnect = () => {
-      if (billIdRef.current === currentBillId && !hasJoinedRef.current && socket.connected) {
-        hasJoinedRef.current = true;
-        joinBill(currentBillId);
-      }
-    };
-
-    // Escutar atualizações da conta
-    const handleBillUpdate = (data: { billId: string; bill: BillResponseDto }) => {
-      if (data.billId === billIdRef.current) {
-        setBill(data.bill);
-      }
-    };
-
-    if (connected && socket.connected) {
-      if (!hasJoinedRef.current) {
-        hasJoinedRef.current = true;
-        joinBill(currentBillId);
-      }
-    } else {
-      socket.once('connect', handleConnect);
-    }
-
-    socket.on('bill-updated', handleBillUpdate);
-
-    return () => {
-      socket.off('connect', handleConnect);
-      socket.off('bill-updated', handleBillUpdate);
-      if (billIdRef.current === currentBillId && hasJoinedRef.current) {
-        hasJoinedRef.current = false;
-        leaveBill(currentBillId);
-      }
-    };
-  }, [billId, connected, socket, joinBill, leaveBill, setBill]);
 
   // Funções de mutação
   const addItem = useCallback(

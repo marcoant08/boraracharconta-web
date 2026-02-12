@@ -8,6 +8,8 @@ import toast from 'react-hot-toast';
 let socketInstance: Socket | null = null;
 let connectionCount = 0;
 let isConnecting = false;
+// Gerenciamento de salas conectadas: Map<billId, contador de componentes usando>
+const connectedRooms = new Map<string, number>();
 
 export const useWebSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -28,6 +30,7 @@ export const useWebSocket = () => {
           socketInstance.close();
           socketInstance = null;
           isConnecting = false;
+          connectedRooms.clear();
           setSocket(null);
           setConnected(false);
           setGlobalConnected(false);
@@ -53,6 +56,7 @@ export const useWebSocket = () => {
           socketInstance.close();
           socketInstance = null;
           isConnecting = false;
+          connectedRooms.clear();
         }
       };
     }
@@ -113,10 +117,11 @@ export const useWebSocket = () => {
           setConnected(false);
           setGlobalConnected(false);
         }
-        // Se foi desconexão forçada, limpar instância
+        // Se foi desconexão forçada, limpar instância e salas conectadas
         if (reason === 'io server disconnect' || reason === 'io client disconnect') {
           socketInstance = null;
           isConnecting = false;
+          connectedRooms.clear();
         }
       };
 
@@ -129,6 +134,11 @@ export const useWebSocket = () => {
           newSocket.close();
         }
       };
+
+      // Listener genérico para logar todos os eventos recebidos do backend
+      newSocket.onAny((eventName, ...args) => {
+        console.log('[WebSocket] Evento recebido:', eventName, args);
+      });
 
       newSocket.on('connect', handleConnect);
       newSocket.on('disconnect', handleDisconnect);
@@ -150,6 +160,7 @@ export const useWebSocket = () => {
           newSocket.close();
           socketInstance = null;
           isConnecting = false;
+          connectedRooms.clear();
           setSocket(null);
           setConnected(false);
           setGlobalConnected(false);
@@ -165,11 +176,22 @@ export const useWebSocket = () => {
   const joinBill = useCallback(
     (billId: string) => {
       const currentSocket = socket || socketInstance;
-      if (currentSocket && currentSocket.connected && billId) {
+      if (!currentSocket || !currentSocket.connected || !billId) {
+        return;
+      }
+
+      // Incrementar contador de componentes usando esta sala
+      const currentCount = connectedRooms.get(billId) || 0;
+      connectedRooms.set(billId, currentCount + 1);
+
+      // Só fazer join se é o primeiro componente a usar esta sala
+      if (currentCount === 0) {
         try {
           currentSocket.emit('join-bill', { billId });
         } catch (error) {
           console.error('Erro ao entrar na conta:', error);
+          // Reverter contador em caso de erro
+          connectedRooms.set(billId, currentCount);
         }
       }
     },
@@ -179,12 +201,26 @@ export const useWebSocket = () => {
   const leaveBill = useCallback(
     (billId: string) => {
       const currentSocket = socket || socketInstance;
-      if (currentSocket && currentSocket.connected && billId) {
-        try {
-          currentSocket.emit('leave-bill', { billId });
-        } catch (error) {
-          console.error('Erro ao sair da conta:', error);
+      if (!billId) {
+        return;
+      }
+
+      // Decrementar contador de componentes usando esta sala
+      const currentCount = connectedRooms.get(billId) || 0;
+      const newCount = Math.max(0, currentCount - 1);
+      
+      if (newCount === 0) {
+        // Só fazer leave se não há mais componentes usando esta sala
+        connectedRooms.delete(billId);
+        if (currentSocket && currentSocket.connected) {
+          try {
+            currentSocket.emit('leave-bill', { billId });
+          } catch (error) {
+            console.error('Erro ao sair da conta:', error);
+          }
         }
+      } else {
+        connectedRooms.set(billId, newCount);
       }
     },
     [socket]

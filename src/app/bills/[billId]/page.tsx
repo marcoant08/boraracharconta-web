@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useBill } from '@/hooks/useBill';
+import { useBillRoom } from '@/hooks/useBillRoom';
 import { useBillStore } from '@/store/bill.store';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { BillTabs } from '@/components/bills/BillTabs';
@@ -16,6 +17,8 @@ export default function BillPage() {
   const router = useRouter();
   const billId = params.billId as string;
   const { bill, loading, error } = useBill(billId);
+  // Gerenciar conexão WebSocket da sala apenas uma vez na página principal
+  useBillRoom(billId);
   const clearBill = useBillStore((state) => state.clearBill);
   const { socket, connected, reconnect } = useWebSocket();
   const [isInRoom, setIsInRoom] = useState(false);

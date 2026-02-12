@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { BillResponseDto } from '@/types/bill.types';
+import { BillResponseDto, BillItemDto } from '@/types/bill.types';
 
 interface BillState {
   currentBill: BillResponseDto | null;
@@ -7,6 +7,8 @@ interface BillState {
   error: string | null;
   setBill: (bill: BillResponseDto) => void;
   updateBill: (updates: Partial<BillResponseDto>) => void;
+  addItem: (item: BillItemDto) => void;
+  removeItem: (itemId: string) => void;
   clearBill: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -32,6 +34,35 @@ export const useBillStore = create<BillState>((set) => ({
       if (!state.currentBill) return state;
       return {
         currentBill: { ...state.currentBill, ...updates },
+      };
+    });
+  },
+
+  addItem: (item: BillItemDto) => {
+    set((state) => {
+      if (!state.currentBill) return state;
+      // Verificar se o item já existe para evitar duplicatas
+      const itemExists = state.currentBill.items.some((i) => i.id === item.id);
+      if (itemExists) return state;
+      
+      return {
+        currentBill: {
+          ...state.currentBill,
+          items: [...state.currentBill.items, item],
+        },
+      };
+    });
+  },
+
+  removeItem: (itemId: string) => {
+    set((state) => {
+      if (!state.currentBill) return state;
+      
+      return {
+        currentBill: {
+          ...state.currentBill,
+          items: state.currentBill.items.filter((item) => item.id !== itemId),
+        },
       };
     });
   },
