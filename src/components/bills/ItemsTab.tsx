@@ -19,8 +19,8 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
   const params = useParams();
   const billId = params.billId as string;
   const { bill, addConsumption, removeConsumption } = useBill(billId);
-  const [showDetails, setShowDetails] = useState(false);
-  const [iconIndex, setIconIndex] = useState(Math.floor(Math.random() * 4));
+  const [showDetails, setShowDetails] = useState<boolean>(false);
+  const [iconIndex, setIconIndex] = useState<number>(Math.floor(Math.random() * 4));
 
   // Criar mapa de consumos para busca O(1) em vez de O(n) para cada participante
   const consumptionMap = useMemo(() => {
@@ -28,7 +28,7 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
     const map = new Map<string, number>();
     bill.consumptions.forEach((c) => {
       if (c.itemId === item.id) {
-        map.set(c.participantId, c.quantity);
+        map.set(c.participantId, c.quantity ?? 0);
       }
     });
     return map;
@@ -55,8 +55,8 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
   }, [bill, item.id, addConsumption, removeConsumption]);
 
   const changeIcon = useCallback(() => {
-    setIconIndex((i) => (i >= 3 ? 0 : i + 1));
-  }, []);
+    setIconIndex(iconIndex >= 3 ? 0 : iconIndex + 1);
+  }, [iconIndex]);
 
   const icons = useMemo(() => [
     <svg key="beer" className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
@@ -80,7 +80,7 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
         <div className="flex items-center gap-3 px-3 flex-1 min-w-0">
           <div onClick={changeIcon} className="cursor-pointer">{icons[iconIndex] || icons[0]}</div>
           <span className="text-xl text-gray-900">x{item.quantity}</span>
-          <div onClick={() => setShowDetails((d) => !d)} className="flex-1 min-w-0 cursor-pointer">
+          <div onClick={() => setShowDetails(!showDetails)} className="flex-1 min-w-0 cursor-pointer">
             <h1 className="truncate text-lg text-ellipsis font-semibold max-w-36 min-[400px]:max-w-44 md:max-w-80 text-gray-900">
               {item.name}
             </h1>
@@ -89,7 +89,7 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
         </div>
         <button
           className="py-2 px-2 flex items-center justify-center w-10 cursor-pointer"
-          onClick={() => setShowDetails((d) => !d)}
+          onClick={() => setShowDetails(!showDetails)}
         >
           <svg
             className={`w-5 h-5 text-gray-800 transition-transform ${showDetails ? 'rotate-180' : ''}`}
