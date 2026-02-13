@@ -18,6 +18,12 @@ export interface ConsumptionDto {
   quantity?: number;
 }
 
+export interface BillDetailDto {
+  userId: string;
+  itemId: string;
+  consumedDuringAbsence: number;
+}
+
 export interface BillResponseDto {
   id: string;
   code: string;
@@ -26,6 +32,7 @@ export interface BillResponseDto {
   participants: ParticipantDto[];
   items: BillItemDto[];
   consumptions: ConsumptionDto[];
+  details: BillDetailDto[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,6 +75,23 @@ export interface UpdateConsumptionRequest {
 
 export interface RemoveConsumptionRequest {
   participantId: string;
+  itemId: string;
+}
+
+export interface AddDetailRequest {
+  userId: string;
+  itemId: string;
+  consumedDuringAbsence: number;
+}
+
+export interface UpdateDetailRequest {
+  userId: string;
+  itemId: string;
+  consumedDuringAbsence: number;
+}
+
+export interface RemoveDetailRequest {
+  userId: string;
   itemId: string;
 }
 

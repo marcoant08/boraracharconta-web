@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useWebSocket } from './useWebSocket';
 import { useBillStore } from '@/store/bill.store';
-import { BillResponseDto, BillItemDto, ParticipantDto, ConsumptionDto } from '@/types/bill.types';
+import { BillResponseDto, BillItemDto, ParticipantDto, ConsumptionDto, BillDetailDto } from '@/types/bill.types';
 
 /**
  * Hook para gerenciar a conexão WebSocket da sala da conta.
@@ -17,6 +17,9 @@ export const useBillRoom = (billId?: string) => {
   const addConsumption = useBillStore((state) => state.addConsumption);
   const updateConsumption = useBillStore((state) => state.updateConsumption);
   const removeConsumption = useBillStore((state) => state.removeConsumption);
+  const addDetail = useBillStore((state) => state.addDetail);
+  const updateDetail = useBillStore((state) => state.updateDetail);
+  const removeDetail = useBillStore((state) => state.removeDetail);
   const hasJoinedRef = useRef(false);
   const billIdRef = useRef<string | undefined>(billId);
 
@@ -147,6 +150,43 @@ export const useBillRoom = (billId?: string) => {
       }
     };
 
+    // Escutar evento de detail adicionado
+    const handleDetailAdded = (data: {
+      billId: string;
+      detail: BillDetailDto;
+      action: string;
+      timestamp: string;
+    }) => {
+      if (data.billId === billIdRef.current) {
+        addDetail(data.detail);
+      }
+    };
+
+    // Escutar evento de detail atualizado
+    const handleDetailUpdated = (data: {
+      billId: string;
+      detail: BillDetailDto;
+      action: string;
+      timestamp: string;
+    }) => {
+      if (data.billId === billIdRef.current) {
+        updateDetail(data.detail);
+      }
+    };
+
+    // Escutar evento de detail removido
+    const handleDetailRemoved = (data: {
+      billId: string;
+      userId: string;
+      itemId: string;
+      action: string;
+      timestamp: string;
+    }) => {
+      if (data.billId === billIdRef.current) {
+        removeDetail(data.userId, data.itemId);
+      }
+    };
+
     if (connected && socket.connected) {
       if (!hasJoinedRef.current) {
         hasJoinedRef.current = true;
@@ -164,6 +204,9 @@ export const useBillRoom = (billId?: string) => {
     socket.on('consumption-added', handleConsumptionAdded);
     socket.on('consumption-updated', handleConsumptionUpdated);
     socket.on('consumption-removed', handleConsumptionRemoved);
+    socket.on('bill-detail-added', handleDetailAdded);
+    socket.on('bill-detail-updated', handleDetailUpdated);
+    socket.on('bill-detail-removed', handleDetailRemoved);
 
     return () => {
       socket.off('connect', handleConnect);
@@ -175,6 +218,9 @@ export const useBillRoom = (billId?: string) => {
       socket.off('consumption-added', handleConsumptionAdded);
       socket.off('consumption-updated', handleConsumptionUpdated);
       socket.off('consumption-removed', handleConsumptionRemoved);
+      socket.off('bill-detail-added', handleDetailAdded);
+      socket.off('bill-detail-updated', handleDetailUpdated);
+      socket.off('bill-detail-removed', handleDetailRemoved);
       // Só fazer leave se ainda estamos no mesmo billId (não mudou)
       if (billIdRef.current === currentBillId) {
         hasJoinedRef.current = false;
@@ -195,5 +241,8 @@ export const useBillRoom = (billId?: string) => {
     addConsumption,
     updateConsumption,
     removeConsumption,
+    addDetail,
+    updateDetail,
+    removeDetail,
   ]);
 };

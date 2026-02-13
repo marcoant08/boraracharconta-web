@@ -171,6 +171,51 @@ export const useBill = (billId?: string) => {
     [billId]
   );
 
+  const addDetail = useCallback(
+    async (data: { userId: string; itemId: string; consumedDuringAbsence: number }) => {
+      if (!billId) return;
+      try {
+        await billService.addDetail(billId, data);
+        toast.success('Detail adicionado com sucesso!');
+      } catch (error: any) {
+        const message = error.response?.data?.message || 'Erro ao adicionar detail.';
+        toast.error(message);
+        throw error;
+      }
+    },
+    [billId]
+  );
+
+  const updateDetail = useCallback(
+    async (data: { userId: string; itemId: string; consumedDuringAbsence: number }) => {
+      if (!billId) return;
+      try {
+        await billService.updateDetail(billId, data);
+        toast.success('Detail atualizado com sucesso!');
+      } catch (error: any) {
+        const message = error.response?.data?.message || 'Erro ao atualizar detail.';
+        toast.error(message);
+        throw error;
+      }
+    },
+    [billId]
+  );
+
+  const removeDetail = useCallback(
+    async (data: { userId: string; itemId: string }) => {
+      if (!billId) return;
+      try {
+        await billService.removeDetail(billId, data);
+        toast.success('Detail removido com sucesso!');
+      } catch (error: any) {
+        const message = error.response?.data?.message || 'Erro ao remover detail.';
+        toast.error(message);
+        throw error;
+      }
+    },
+    [billId]
+  );
+
   const fetchBill = useCallback(
     async (id: string) => {
       try {
@@ -204,5 +249,8 @@ export const useBill = (billId?: string) => {
     removeConsumption,
     addParticipant,
     removeParticipant,
+    addDetail,
+    updateDetail,
+    removeDetail,
   };
 };

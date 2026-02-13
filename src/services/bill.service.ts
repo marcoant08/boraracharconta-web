@@ -11,6 +11,9 @@ import {
   AddConsumptionRequest,
   UpdateConsumptionRequest,
   RemoveConsumptionRequest,
+  AddDetailRequest,
+  UpdateDetailRequest,
+  RemoveDetailRequest,
 } from '@/types/bill.types';
 
 export const billService = {
@@ -61,5 +64,17 @@ export const billService = {
 
   async removeParticipant(billId: string, participantId: string): Promise<void> {
     await api.delete(`/bills/${billId}/participants/${participantId}`);
+  },
+
+  async addDetail(billId: string, data: AddDetailRequest): Promise<void> {
+    await api.post(`/bills/${billId}/details`, data);
+  },
+
+  async updateDetail(billId: string, data: UpdateDetailRequest): Promise<void> {
+    await api.put(`/bills/${billId}/details`, data);
+  },
+
+  async removeDetail(billId: string, data: RemoveDetailRequest): Promise<void> {
+    await api.delete(`/bills/${billId}/details`, { data });
   },
 };

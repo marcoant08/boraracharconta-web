@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { BillResponseDto, BillItemDto, ParticipantDto, ConsumptionDto } from '@/types/bill.types';
+import { BillResponseDto, BillItemDto, ParticipantDto, ConsumptionDto, BillDetailDto } from '@/types/bill.types';
 
 interface BillState {
   currentBill: BillResponseDto | null;
@@ -14,6 +14,9 @@ interface BillState {
   addConsumption: (consumption: ConsumptionDto) => void;
   updateConsumption: (consumption: ConsumptionDto) => void;
   removeConsumption: (participantId: string, itemId: string) => void;
+  addDetail: (detail: BillDetailDto) => void;
+  updateDetail: (detail: BillDetailDto) => void;
+  removeDetail: (userId: string, itemId: string) => void;
   clearBill: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -28,7 +31,11 @@ export const useBillStore = create<BillState>((set) => ({
     console.log('[bill]', bill);
     set((state) => ({
       ...state,
-      currentBill: bill,
+      currentBill: {
+        ...bill,
+        // Garantir que details sempre existe, mesmo se o backend não enviar
+        details: bill.details || [],
+      },
       error: null,
       loading: false, // Garantir que loading seja false quando bill é atualizada
     }));
@@ -38,7 +45,12 @@ export const useBillStore = create<BillState>((set) => ({
     set((state) => {
       if (!state.currentBill) return state;
       return {
-        currentBill: { ...state.currentBill, ...updates },
+        currentBill: {
+          ...state.currentBill,
+          ...updates,
+          // Garantir que details sempre existe
+          details: updates.details !== undefined ? updates.details : (state.currentBill.details || []),
+        },
       };
     });
   },
@@ -70,6 +82,10 @@ export const useBillStore = create<BillState>((set) => ({
           // Também remover consumos relacionados a este item
           consumptions: state.currentBill.consumptions.filter(
             (c) => c.itemId !== itemId
+          ),
+          // Também remover details relacionados a este item
+          details: (state.currentBill.details || []).filter(
+            (d) => d.itemId !== itemId
           ),
         },
       };
@@ -107,6 +123,10 @@ export const useBillStore = create<BillState>((set) => ({
           // Também remover consumos relacionados a este participante
           consumptions: state.currentBill.consumptions.filter(
             (c) => c.participantId !== participantId
+          ),
+          // Também remover details relacionados a este participante
+          details: (state.currentBill.details || []).filter(
+            (d) => d.userId !== participantId
           ),
         },
       };
@@ -170,6 +190,71 @@ export const useBillStore = create<BillState>((set) => ({
           ...state.currentBill,
           consumptions: state.currentBill.consumptions.filter(
             (c) => !(c.participantId === participantId && c.itemId === itemId)
+          ),
+        },
+      };
+    });
+  },
+
+  addDetail: (detail: BillDetailDto) => {
+    set((state) => {
+      if (!state.currentBill) return state;
+      const currentDetails = state.currentBill.details || [];
+      // Verificar se o detail já existe para evitar duplicatas
+      const detailExists = currentDetails.some(
+        (d) => d.userId === detail.userId && d.itemId === detail.itemId
+      );
+      if (detailExists) return state;
+      
+      return {
+        currentBill: {
+          ...state.currentBill,
+          details: [...currentDetails, detail],
+        },
+      };
+    });
+  },
+
+  updateDetail: (detail: BillDetailDto) => {
+    set((state) => {
+      if (!state.currentBill) return state;
+      const currentDetails = state.currentBill.details || [];
+      
+      const existingIndex = currentDetails.findIndex(
+        (d) => d.userId === detail.userId && d.itemId === detail.itemId
+      );
+      
+      if (existingIndex >= 0) {
+        // Atualizar detail existente
+        return {
+          currentBill: {
+            ...state.currentBill,
+            details: currentDetails.map((d, index) =>
+              index === existingIndex ? detail : d
+            ),
+          },
+        };
+      } else {
+        // Adicionar novo detail se não existir
+        return {
+          currentBill: {
+            ...state.currentBill,
+            details: [...currentDetails, detail],
+          },
+        };
+      }
+    });
+  },
+
+  removeDetail: (userId: string, itemId: string) => {
+    set((state) => {
+      if (!state.currentBill) return state;
+      
+      return {
+        currentBill: {
+          ...state.currentBill,
+          details: (state.currentBill.details || []).filter(
+            (d) => !(d.userId === userId && d.itemId === itemId)
           ),
         },
       };
