@@ -47,6 +47,39 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
   const totalQuantityConsumed = item.quantity; // Total consumido é a quantity do item
   const details = (bill.details || []).filter((d) => d.itemId === itemId);
   
+  // Obter participantes que realmente consumiram este item
+  const itemConsumptions = getItemConsumptions(bill, itemId);
+  const consumingParticipantIds = new Set(
+    itemConsumptions.map((c) => c.participantId)
+  );
+  const consumingParticipants = bill.participants.filter((p) =>
+    consumingParticipantIds.has(p.userId)
+  );
+  
+  // Se não há participantes consumindo o item, retornar resultado vazio
+  if (consumingParticipants.length === 0) {
+    return {
+      item: {
+        id: item.id,
+        name: item.name,
+        value: item.value,
+        quantity: item.quantity,
+      },
+      totalValue: item.value * item.quantity,
+      totalConsumed: totalQuantityConsumed,
+      valuePerUnit: item.value,
+      participantTotals: [],
+      steps: [
+        {
+          description: `Total de ${item.name}: ${item.quantity} unidade${item.quantity > 1 ? 's' : ''} × ${formatCurrency(valuePerUnit)} = ${formatCurrency(totalValue)}`,
+        },
+        {
+          description: `Nenhum participante marcou consumo deste item.`,
+        },
+      ],
+    };
+  }
+  
   if (totalQuantityConsumed === 0) {
     return {
       item: {
@@ -82,8 +115,8 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
     breakdown: Array<{ description: string; value: number }>;
   }>();
 
-  // Inicializar todos os participantes com 0
-  bill.participants.forEach((p) => {
+  // Inicializar apenas participantes que consumiram o item
+  consumingParticipants.forEach((p) => {
     participantTotalsMap.set(p.userId, {
       participantId: p.userId,
       participantName: p.name,
@@ -97,14 +130,17 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
 
   // Processar details (consumos durante ausência) - ETAPA 1
   // Lógica incremental: calcular por níveis de ausência sobrepostos
-  if (details.length > 0) {
+  // Filtrar detalhes apenas para participantes que consumiram o item
+  const relevantDetails = details.filter((d) => consumingParticipantIds.has(d.userId));
+  
+  if (relevantDetails.length > 0) {
     steps.push({
       description: `\n📝 ETAPA 1 - Consumos durante ausência:`,
     });
     
-    // Criar mapa de ausências por participante
+    // Criar mapa de ausências por participante (apenas os que consumiram)
     const absenceMap = new Map<string, number>();
-    details.forEach((detail) => {
+    relevantDetails.forEach((detail) => {
       const current = absenceMap.get(detail.userId) || 0;
       absenceMap.set(detail.userId, Math.max(current, detail.consumedDuringAbsence));
     });
@@ -114,7 +150,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
       .map(([userId, quantity]) => ({
         userId,
         quantity,
-        name: bill.participants.find((p) => p.userId === userId)?.name || userId,
+        name: consumingParticipants.find((p) => p.userId === userId)?.name || userId,
       }))
       .sort((a, b) => a.quantity - b.quantity);
 
@@ -132,8 +168,8 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
         .filter((e) => e.quantity >= currentQuantity)
         .map((e) => e.userId);
 
-      // Participantes presentes (todos exceto os ausentes neste nível)
-      const presentParticipants = bill.participants.filter(
+      // Participantes presentes (apenas os que consumiram o item, exceto os ausentes neste nível)
+      const presentParticipants = consumingParticipants.filter(
         (p) => !absentAtThisLevel.includes(p.userId)
       );
 
@@ -150,7 +186,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
       const valuePerPresentParticipant = valueForThisLevel / presentParticipants.length;
       const presentParticipantsNames = presentParticipants.map((p) => p.name).join(', ');
       const absentParticipantsNames = absentAtThisLevel
-        .map((uid) => bill.participants.find((p) => p.userId === uid)?.name || uid)
+        .map((uid) => consumingParticipants.find((p) => p.userId === uid)?.name || uid)
         .join(' e ');
 
       // Adicionar descrição do passo
@@ -192,8 +228,8 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
   
   if (remainingConsumed > 0) {
     const remainingValue = remainingConsumed * valuePerUnit;
-    const valuePerParticipant = remainingValue / bill.participants.length;
-    const allParticipantsNames = bill.participants.map((p) => p.name).join(', ');
+    const valuePerParticipant = remainingValue / consumingParticipants.length;
+    const allParticipantsNames = consumingParticipants.map((p) => p.name).join(', ');
     
     if (totalConsumedDuringAbsence > 0) {
       steps.push({
@@ -203,7 +239,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
         description: `  • ${remainingConsumed} unidade${remainingConsumed > 1 ? 's' : ''} consumida${remainingConsumed > 1 ? 's' : ''} com todos presentes`,
       });
       steps.push({
-        description: `    Cálculo: (${remainingConsumed} × ${formatCurrency(valuePerUnit)}) ÷ ${bill.participants.length} = ${formatCurrency(valuePerParticipant)} cada`,
+        description: `    Cálculo: (${remainingConsumed} × ${formatCurrency(valuePerUnit)}) ÷ ${consumingParticipants.length} = ${formatCurrency(valuePerParticipant)} cada`,
       });
     } else {
       steps.push({
@@ -213,15 +249,15 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
         description: `  • ${remainingConsumed} unidade${remainingConsumed > 1 ? 's' : ''} consumida${remainingConsumed > 1 ? 's' : ''}`,
       });
       steps.push({
-        description: `    Cálculo: (${remainingConsumed} × ${formatCurrency(valuePerUnit)}) ÷ ${bill.participants.length} = ${formatCurrency(valuePerParticipant)} cada`,
+        description: `    Cálculo: (${remainingConsumed} × ${formatCurrency(valuePerUnit)}) ÷ ${consumingParticipants.length} = ${formatCurrency(valuePerParticipant)} cada`,
       });
       steps.push({
         description: `    Participantes: ${allParticipantsNames}`,
       });
     }
 
-    // Adicionar a todos os participantes
-    bill.participants.forEach((p) => {
+    // Adicionar apenas aos participantes que consumiram
+    consumingParticipants.forEach((p) => {
       const participantTotal = participantTotalsMap.get(p.userId);
       if (participantTotal) {
         participantTotal.total += valuePerParticipant;
