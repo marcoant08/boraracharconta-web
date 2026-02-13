@@ -45,7 +45,7 @@ export const StatisticsTab = () => {
         </div>
       </Card>
 
-      <Card title="Divisão Detalhada por Item">
+      <Card title="Cálculo Detalhado por Item">
         <div className="space-y-6">
           {bill.items.map((item) => {
             const division = calculateItemDivision(bill, item.id);
@@ -53,28 +53,60 @@ export const StatisticsTab = () => {
 
             return (
               <div key={item.id} className="p-4 border border-gray-200 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">{item.name}</h4>
-                <p className="text-sm text-gray-600 mb-4">
-                  Valor total: {formatCurrency(division.totalValue)} | Valor por unidade:{' '}
-                  {formatCurrency(division.valuePerUnit)}
-                </p>
-                <div className="space-y-2">
-                  {division.consumptions.map((c) => {
-                    const participant = bill.participants.find((p) => p.userId === c.participantId);
-                    if (!participant) return null;
+                <h4 className="font-semibold text-gray-900 mb-4 text-lg">
+                  {item.name}
+                </h4>
+                
+                {/* Passo a passo do cálculo */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <h5 className="font-semibold text-gray-900 mb-3">📊 Passo a passo do cálculo:</h5>
+                  <div className="space-y-1 text-sm text-gray-700 font-mono">
+                    {division.steps.map((step, index) => {
+                      // Se a linha começa com \n, criar uma quebra de linha visual
+                      const isSectionHeader = step.description.startsWith('\n');
+                      const cleanDescription = step.description.replace(/^\n+/, '');
+                      
+                      return (
+                        <div
+                          key={index}
+                          className={`whitespace-pre-line ${
+                            isSectionHeader ? 'mt-3 font-semibold text-gray-900' : ''
+                          }`}
+                        >
+                          {cleanDescription}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                    return (
+                {/* Resumo por participante */}
+                <div className="mt-4">
+                  <h5 className="font-semibold text-gray-900 mb-2">💰 Total por participante:</h5>
+                  <div className="space-y-2">
+                    {division.participantTotals.map((pt) => (
                       <div
-                        key={c.participantId}
-                        className="flex justify-between text-sm text-gray-700"
+                        key={pt.participantId}
+                        className="flex justify-between items-start p-2 bg-gray-50 rounded"
                       >
-                        <span>
-                          {participant.name} ({c.quantity} unidade{c.quantity > 1 ? 's' : ''})
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900">{pt.participantName}</div>
+                          {pt.breakdown.length > 0 && (
+                            <div className="text-xs text-gray-600 mt-1 space-y-1">
+                              {pt.breakdown.map((b, idx) => (
+                                <div key={idx}>
+                                  • {b.description}: {formatCurrency(b.value)}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <span className="font-bold text-primary-600 ml-4">
+                          {formatCurrency(pt.total)}
                         </span>
-                        <span className="font-medium">{formatCurrency(c.total)}</span>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
               </div>
             );
