@@ -172,13 +172,13 @@ export const useBill = (billId?: string) => {
   );
 
   const addDetail = useCallback(
-    async (data: { userId: string; itemId: string; consumedDuringAbsence: number }) => {
+    async (data: { itemId: string; userId: string; quantityConsumed: number; action: 'join' | 'left' }) => {
       if (!billId) return;
       try {
         await billService.addDetail(billId, data);
-        toast.success('Detail adicionado com sucesso!');
+        toast.success('Evento adicionado com sucesso!');
       } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao adicionar detail.';
+        const message = error.response?.data?.message || 'Erro ao adicionar evento.';
         toast.error(message);
         throw error;
       }
@@ -187,13 +187,13 @@ export const useBill = (billId?: string) => {
   );
 
   const updateDetail = useCallback(
-    async (data: { userId: string; itemId: string; consumedDuringAbsence: number }) => {
+    async (data: { itemId: string; userId: string; quantityConsumed: number; action: 'join' | 'left' }) => {
       if (!billId) return;
       try {
         await billService.updateDetail(billId, data);
-        toast.success('Detail atualizado com sucesso!');
+        toast.success('Evento atualizado com sucesso!');
       } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao atualizar detail.';
+        const message = error.response?.data?.message || 'Erro ao atualizar evento.';
         toast.error(message);
         throw error;
       }

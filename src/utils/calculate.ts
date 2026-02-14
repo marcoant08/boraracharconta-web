@@ -125,146 +125,179 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
     });
   });
 
-  // Rastrear quantidade total processada na ETAPA 1
-  let totalConsumedDuringAbsence = 0;
+  // Função auxiliar: construir linha do tempo ordenada por quantityConsumed
+  const buildTimeline = (details: BillDetailDto[]): BillDetailDto[] => {
+    return [...details].sort((a, b) => a.quantityConsumed - b.quantityConsumed);
+  };
 
-  // Processar details (consumos durante ausência) - ETAPA 1
-  // Lógica incremental: calcular por níveis de ausência sobrepostos
+  // Função auxiliar: obter participantes presentes na mesa em um determinado quantityConsumed
+  const getParticipantsAtQuantity = (
+    timeline: BillDetailDto[],
+    atQuantity: number,
+    allConsumingParticipants: typeof consumingParticipants
+  ): typeof consumingParticipants => {
+    // Mapa para rastrear estado de cada participante
+    const participantState = new Map<string, boolean>();
+    
+    // Mapa para rastrear o primeiro evento de cada participante
+    const firstEventByParticipant = new Map<string, BillDetailDto>();
+    for (const event of timeline) {
+      if (!firstEventByParticipant.has(event.userId)) {
+        firstEventByParticipant.set(event.userId, event);
+      }
+    }
+    
+    // Inicializar estado de cada participante:
+    // - Se não tem eventos OU primeiro evento é "join" em quantityConsumed === 0: presente desde o início
+    // - Se primeiro evento é "join" em quantityConsumed > 0: não estava presente antes (chegou atrasado)
+    // - Se primeiro evento é "left": estava presente antes (saiu depois)
+    allConsumingParticipants.forEach((p) => {
+      const firstEvent = firstEventByParticipant.get(p.userId);
+      if (!firstEvent) {
+        // Sem eventos: presente desde o início
+        participantState.set(p.userId, true);
+      } else if (firstEvent.action === 'join' && firstEvent.quantityConsumed > 0) {
+        // Primeiro evento é "join" após quantityConsumed > 0: chegou atrasado, não estava presente antes
+        participantState.set(p.userId, false);
+      } else {
+        // Primeiro evento é "join" em 0 ou "left": estava presente desde o início
+        participantState.set(p.userId, true);
+      }
+    });
+
+    // Processar eventos até atQuantity para atualizar estados
+    for (const event of timeline) {
+      if (event.quantityConsumed > atQuantity) break;
+      
+      if (event.action === 'join') {
+        participantState.set(event.userId, true);
+      } else if (event.action === 'left') {
+        participantState.set(event.userId, false);
+      }
+    }
+
+    // Retornar apenas participantes presentes
+    return allConsumingParticipants.filter((p) => participantState.get(p.userId) === true);
+  };
+
   // Filtrar detalhes apenas para participantes que consumiram o item
   const relevantDetails = details.filter((d) => consumingParticipantIds.has(d.userId));
   
-  if (relevantDetails.length > 0) {
-    steps.push({
-      description: `\n📝 ETAPA 1 - Consumos durante ausência:`,
-    });
-    
-    // Criar mapa de ausências por participante (apenas os que consumiram)
-    const absenceMap = new Map<string, number>();
-    relevantDetails.forEach((detail) => {
-      const current = absenceMap.get(detail.userId) || 0;
-      absenceMap.set(detail.userId, Math.max(current, detail.consumedDuringAbsence));
-    });
+  // Construir linha do tempo ordenada
+  const timeline = buildTimeline(relevantDetails);
 
-    // Criar array de ausências ordenadas por quantidade (menor primeiro)
-    const absenceEntries = Array.from(absenceMap.entries())
-      .map(([userId, quantity]) => ({
-        userId,
-        quantity,
-        name: consumingParticipants.find((p) => p.userId === userId)?.name || userId,
-      }))
-      .sort((a, b) => a.quantity - b.quantity);
+  // Processar períodos baseados em eventos
+  if (timeline.length > 0) {
+    steps.push({
+      description: `\n📝 Linha do Tempo - Consumos por período:`,
+    });
 
     let previousQuantity = 0;
+    let hasProcessedAnyPeriod = false;
 
-    for (let i = 0; i < absenceEntries.length; i++) {
-      const currentEntry = absenceEntries[i];
-      const currentQuantity = currentEntry.quantity;
-      const quantityToProcess = currentQuantity - previousQuantity;
+    // Processar cada período entre eventos
+    for (let i = 0; i <= timeline.length; i++) {
+      const currentQuantity = i < timeline.length 
+        ? timeline[i].quantityConsumed 
+        : totalQuantityConsumed;
+      
+      const periodQuantity = currentQuantity - previousQuantity;
+      
+      if (periodQuantity > 0) {
+        // Obter participantes presentes neste período
+        // Usar previousQuantity para determinar estado no início do período
+        // (antes do evento que acontece em currentQuantity, se houver)
+        const presentParticipants = getParticipantsAtQuantity(
+          timeline,
+          previousQuantity,
+          consumingParticipants
+        );
 
-      if (quantityToProcess <= 0) continue;
+        if (presentParticipants.length > 0) {
+          hasProcessedAnyPeriod = true;
+          const periodValue = periodQuantity * valuePerUnit;
+          const valuePerParticipant = periodValue / presentParticipants.length;
+          const presentParticipantsNames = presentParticipants.map((p) => p.name).join(', ');
 
-      // Participantes que ainda estão ausentes neste nível (quantidade >= currentQuantity)
-      const absentAtThisLevel = absenceEntries
-        .filter((e) => e.quantity >= currentQuantity)
-        .map((e) => e.userId);
+          steps.push({
+            description: `  • Período: ${previousQuantity} até ${currentQuantity} unidade${currentQuantity !== 1 ? 's' : ''} (${periodQuantity} unidade${periodQuantity > 1 ? 's' : ''})`,
+          });
+          steps.push({
+            description: `    Participantes presentes: ${presentParticipantsNames}`,
+          });
+          steps.push({
+            description: `    Cálculo: (${periodQuantity} × ${formatCurrency(valuePerUnit)}) ÷ ${presentParticipants.length} = ${formatCurrency(valuePerParticipant)} cada`,
+          });
 
-      // Participantes presentes (apenas os que consumiram o item, exceto os ausentes neste nível)
-      const presentParticipants = consumingParticipants.filter(
-        (p) => !absentAtThisLevel.includes(p.userId)
-      );
-
-      if (presentParticipants.length === 0) {
-        // Se não há ninguém presente, pular este nível
-        previousQuantity = currentQuantity;
-        continue;
-      }
-
-      // Acumular quantidade processada na ETAPA 1
-      totalConsumedDuringAbsence += quantityToProcess;
-
-      const valueForThisLevel = quantityToProcess * valuePerUnit;
-      const valuePerPresentParticipant = valueForThisLevel / presentParticipants.length;
-      const presentParticipantsNames = presentParticipants.map((p) => p.name).join(', ');
-      const absentParticipantsNames = absentAtThisLevel
-        .map((uid) => consumingParticipants.find((p) => p.userId === uid)?.name || uid)
-        .join(' e ');
-
-      // Adicionar descrição do passo
-      if (i === 0 || previousQuantity === 0) {
-        steps.push({
-          description: `  • ${quantityToProcess} unidade${quantityToProcess > 1 ? 's' : ''} consumida${quantityToProcess > 1 ? 's' : ''} durante ausência de ${absentParticipantsNames}`,
-        });
-      } else {
-        steps.push({
-          description: `  • mais ${quantityToProcess} unidade${quantityToProcess > 1 ? 's' : ''} consumida${quantityToProcess > 1 ? 's' : ''} durante ausência de ${absentParticipantsNames}`,
-        });
-      }
-
-      steps.push({
-        description: `    Cálculo: (${quantityToProcess} × ${formatCurrency(valuePerUnit)}) ÷ ${presentParticipants.length} = ${formatCurrency(valuePerPresentParticipant)} para cada`,
-      });
-      steps.push({
-        description: `    Participantes presentes: ${presentParticipantsNames}`,
-      });
-
-      // Adicionar aos participantes presentes
-      presentParticipants.forEach((p) => {
-        const participantTotal = participantTotalsMap.get(p.userId);
-        if (participantTotal) {
-          participantTotal.total += valuePerPresentParticipant;
-          participantTotal.breakdown.push({
-            description: `Etapa 1: Consumo durante ausência de ${absentParticipantsNames} (${quantityToProcess} unidade${quantityToProcess > 1 ? 's' : ''})`,
-            value: valuePerPresentParticipant,
+          // Adicionar aos participantes presentes
+          presentParticipants.forEach((p) => {
+            const participantTotal = participantTotalsMap.get(p.userId);
+            if (participantTotal) {
+              participantTotal.total += valuePerParticipant;
+              participantTotal.breakdown.push({
+                description: `Período ${previousQuantity}-${currentQuantity}: ${periodQuantity} unidade${periodQuantity > 1 ? 's' : ''} (${presentParticipantsNames})`,
+                value: valuePerParticipant,
+              });
+            }
           });
         }
-      });
+      }
 
       previousQuantity = currentQuantity;
     }
-  }
 
-  // Calcular unidades restantes (consumidas com presença de todos) - ETAPA 2
-  const remainingConsumed = totalQuantityConsumed - totalConsumedDuringAbsence;
-  
-  if (remainingConsumed > 0) {
-    const remainingValue = remainingConsumed * valuePerUnit;
-    const valuePerParticipant = remainingValue / consumingParticipants.length;
-    const allParticipantsNames = consumingParticipants.map((p) => p.name).join(', ');
-    
-    if (totalConsumedDuringAbsence > 0) {
+    if (!hasProcessedAnyPeriod) {
+      // Se não processou nenhum período, todos os participantes estavam presentes o tempo todo
+      const periodValue = totalQuantityConsumed * valuePerUnit;
+      const valuePerParticipant = periodValue / consumingParticipants.length;
+      const allParticipantsNames = consumingParticipants.map((p) => p.name).join(', ');
+
       steps.push({
-        description: `\n👥 ETAPA 2 - Consumos com a presença de ${allParticipantsNames}:`,
-      });
-      steps.push({
-        description: `  • ${remainingConsumed} unidade${remainingConsumed > 1 ? 's' : ''} consumida${remainingConsumed > 1 ? 's' : ''} com todos presentes`,
-      });
-      steps.push({
-        description: `    Cálculo: (${remainingConsumed} × ${formatCurrency(valuePerUnit)}) ÷ ${consumingParticipants.length} = ${formatCurrency(valuePerParticipant)} cada`,
-      });
-    } else {
-      steps.push({
-        description: `\n👥 ETAPA 1 - Todos os consumos divididos igualmente:`,
-      });
-      steps.push({
-        description: `  • ${remainingConsumed} unidade${remainingConsumed > 1 ? 's' : ''} consumida${remainingConsumed > 1 ? 's' : ''}`,
-      });
-      steps.push({
-        description: `    Cálculo: (${remainingConsumed} × ${formatCurrency(valuePerUnit)}) ÷ ${consumingParticipants.length} = ${formatCurrency(valuePerParticipant)} cada`,
+        description: `  • Todos os participantes estiveram presentes durante todo o consumo`,
       });
       steps.push({
         description: `    Participantes: ${allParticipantsNames}`,
       });
-    }
+      steps.push({
+        description: `    Cálculo: (${totalQuantityConsumed} × ${formatCurrency(valuePerUnit)}) ÷ ${consumingParticipants.length} = ${formatCurrency(valuePerParticipant)} cada`,
+      });
 
-    // Adicionar apenas aos participantes que consumiram
+      consumingParticipants.forEach((p) => {
+        const participantTotal = participantTotalsMap.get(p.userId);
+        if (participantTotal) {
+          participantTotal.total += valuePerParticipant;
+          participantTotal.breakdown.push({
+            description: `Consumo total dividido igualmente (${totalQuantityConsumed} unidade${totalQuantityConsumed > 1 ? 's' : ''})`,
+            value: valuePerParticipant,
+          });
+        }
+      });
+    }
+  } else {
+    // Sem eventos na linha do tempo - dividir igualmente entre todos
+    const periodValue = totalQuantityConsumed * valuePerUnit;
+    const valuePerParticipant = periodValue / consumingParticipants.length;
+    const allParticipantsNames = consumingParticipants.map((p) => p.name).join(', ');
+
+    steps.push({
+      description: `\n👥 Todos os consumos divididos igualmente:`,
+    });
+    steps.push({
+      description: `  • ${totalQuantityConsumed} unidade${totalQuantityConsumed > 1 ? 's' : ''} consumida${totalQuantityConsumed > 1 ? 's' : ''}`,
+    });
+    steps.push({
+      description: `    Cálculo: (${totalQuantityConsumed} × ${formatCurrency(valuePerUnit)}) ÷ ${consumingParticipants.length} = ${formatCurrency(valuePerParticipant)} cada`,
+    });
+    steps.push({
+      description: `    Participantes: ${allParticipantsNames}`,
+    });
+
     consumingParticipants.forEach((p) => {
       const participantTotal = participantTotalsMap.get(p.userId);
       if (participantTotal) {
         participantTotal.total += valuePerParticipant;
         participantTotal.breakdown.push({
-          description: totalConsumedDuringAbsence > 0
-            ? `Etapa 2: Consumo com presença de todos (${remainingConsumed} unidade${remainingConsumed > 1 ? 's' : ''})`
-            : `Etapa 1: Consumo total dividido igualmente (${remainingConsumed} unidade${remainingConsumed > 1 ? 's' : ''})`,
+          description: `Consumo total dividido igualmente (${totalQuantityConsumed} unidade${totalQuantityConsumed > 1 ? 's' : ''})`,
           value: valuePerParticipant,
         });
       }

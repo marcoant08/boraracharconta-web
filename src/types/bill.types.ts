@@ -19,9 +19,10 @@ export interface ConsumptionDto {
 }
 
 export interface BillDetailDto {
-  userId: string;
   itemId: string;
-  consumedDuringAbsence: number;
+  userId: string;
+  quantityConsumed: number;  // Após quantas unidades este evento ocorreu
+  action: 'join' | 'left';  // Entrar ou sair da mesa
 }
 
 export interface BillResponseDto {
@@ -79,15 +80,17 @@ export interface RemoveConsumptionRequest {
 }
 
 export interface AddDetailRequest {
-  userId: string;
   itemId: string;
-  consumedDuringAbsence: number;
+  userId: string;
+  quantityConsumed: number;
+  action: 'join' | 'left';
 }
 
 export interface UpdateDetailRequest {
-  userId: string;
   itemId: string;
-  consumedDuringAbsence: number;
+  userId: string;
+  quantityConsumed: number;
+  action: 'join' | 'left';
 }
 
 export interface RemoveDetailRequest {

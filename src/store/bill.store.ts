@@ -200,11 +200,7 @@ export const useBillStore = create<BillState>((set) => ({
     set((state) => {
       if (!state.currentBill) return state;
       const currentDetails = state.currentBill.details || [];
-      // Verificar se o detail já existe para evitar duplicatas
-      const detailExists = currentDetails.some(
-        (d) => d.userId === detail.userId && d.itemId === detail.itemId
-      );
-      if (detailExists) return state;
+      // Permitir múltiplos eventos para mesmo userId + itemId (linha do tempo)
       
       return {
         currentBill: {
@@ -220,29 +216,22 @@ export const useBillStore = create<BillState>((set) => ({
       if (!state.currentBill) return state;
       const currentDetails = state.currentBill.details || [];
       
-      const existingIndex = currentDetails.findIndex(
+      // Atualizar TODOS os details que correspondem a userId + itemId (conforme documentação)
+      const updatedDetails = currentDetails.map((d) =>
+        d.userId === detail.userId && d.itemId === detail.itemId ? detail : d
+      );
+      
+      // Se não havia nenhum detail para atualizar, adicionar novo
+      const hadMatchingDetails = currentDetails.some(
         (d) => d.userId === detail.userId && d.itemId === detail.itemId
       );
       
-      if (existingIndex >= 0) {
-        // Atualizar detail existente
-        return {
-          currentBill: {
-            ...state.currentBill,
-            details: currentDetails.map((d, index) =>
-              index === existingIndex ? detail : d
-            ),
-          },
-        };
-      } else {
-        // Adicionar novo detail se não existir
-        return {
-          currentBill: {
-            ...state.currentBill,
-            details: [...currentDetails, detail],
-          },
-        };
-      }
+      return {
+        currentBill: {
+          ...state.currentBill,
+          details: hadMatchingDetails ? updatedDetails : [...currentDetails, detail],
+        },
+      };
     });
   },
 
