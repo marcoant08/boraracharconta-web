@@ -10,14 +10,9 @@ interface TabsProps {
   activeTab: string;
   onTabChange: (tabId: string) => void;
   children: ReactNode;
-  connected?: boolean;
 }
 
-export const Tabs = ({ tabs, activeTab, onTabChange, children, connected = true }: TabsProps) => {
-  const borderColor = connected ? 'border-green-500' : 'border-red-500';
-  const textColor = connected ? 'text-green-600' : 'text-red-600';
-  const bgColor = connected ? 'bg-green-50' : 'bg-red-50';
-
+export const Tabs = ({ tabs, activeTab, onTabChange, children }: TabsProps) => {
   return (
     <div className="w-full h-full flex flex-col relative">
       <div className="flex-1 overflow-y-auto pb-24 px-4">{children}</div>
@@ -31,7 +26,7 @@ export const Tabs = ({ tabs, activeTab, onTabChange, children, connected = true 
                 flex-1 px-4 py-4 text-sm font-medium transition-colors
                 ${
                   activeTab === tab.id
-                    ? `${textColor} ${bgColor} border-t-2 ${borderColor}`
+                    ? 'text-primary-600 bg-primary-50 border-t-2 border-primary-500'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }
               `}

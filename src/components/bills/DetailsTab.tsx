@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useBill } from '@/hooks/useBill';
 import { useAuthStore } from '@/store/auth.store';
 import { useParams } from 'next/navigation';
-import { BillDetailDto } from '@/types/bill.types';
+import { BillDetailDto, participantResolvedId } from '@/types/bill.types';
 import toast from 'react-hot-toast';
 
 export const DetailsTab = () => {
@@ -19,10 +19,25 @@ export const DetailsTab = () => {
   const [action, setAction] = useState<'join' | 'left'>('join');
   const [editingDetail, setEditingDetail] = useState<BillDetailDto | null>(null);
 
-  if (!bill) return null;
+  const details = useMemo(() => bill?.details ?? [], [bill?.details]);
 
-  // Garantir que details sempre existe
-  const details = bill.details || [];
+  const timelineByItem = useMemo(() => {
+    const grouped = new Map<string, BillDetailDto[]>();
+
+    details.forEach((detail) => {
+      const itemDetails = grouped.get(detail.itemId) || [];
+      itemDetails.push(detail);
+      grouped.set(detail.itemId, itemDetails);
+    });
+
+    grouped.forEach((itemDetails) => {
+      itemDetails.sort((a, b) => a.quantityConsumed - b.quantityConsumed);
+    });
+
+    return grouped;
+  }, [details]);
+
+  if (!bill) return null;
 
   const isAdmin = bill.adminId === user?.id;
   const isVerifiedParticipant = bill.participants.some(
@@ -32,20 +47,14 @@ export const DetailsTab = () => {
 
   // Função auxiliar para verificar se participante está na mesa em um determinado momento
   const isParticipantAtTable = (userId: string, itemId: string, atQuantity: number): boolean => {
-    // Obter todos os eventos do participante para este item, ordenados por quantityConsumed
     const participantEvents = details
       .filter((d) => d.userId === userId && d.itemId === itemId)
       .sort((a, b) => a.quantityConsumed - b.quantityConsumed);
 
-    // Se não há eventos:
-    // - Se atQuantity === 0: participante está na mesa desde o início (estado padrão)
-    // - Se atQuantity > 0: participante NÃO estava presente antes (chegou atrasado)
     if (participantEvents.length === 0) {
       return atQuantity === 0;
     }
 
-    // Simular linha do tempo até atQuantity
-    // Começar assumindo que está na mesa desde o início (estado padrão)
     let isAtTable = true;
     for (const event of participantEvents) {
       if (event.quantityConsumed > atQuantity) break;
@@ -53,14 +62,6 @@ export const DetailsTab = () => {
     }
 
     return isAtTable;
-  };
-
-  // Verificar estado atual do participante (no momento atual, considerando todos os eventos)
-  const getParticipantCurrentState = (userId: string, itemId: string): 'join' | 'left' | null => {
-    const item = bill.items.find((i) => i.id === itemId);
-    if (!item) return null;
-    
-    return isParticipantAtTable(userId, itemId, item.quantity) ? 'join' : 'left';
   };
 
   const handleAddDetail = async () => {
@@ -124,7 +125,7 @@ export const DetailsTab = () => {
       setSelectedItemId('');
       setQuantityConsumed(0);
       setAction('join');
-    } catch (error) {
+    } catch {
       // Erro já tratado no hook
     }
   };
@@ -148,13 +149,15 @@ export const DetailsTab = () => {
   const handleRemoveDetail = async (userId: string, itemId: string) => {
     try {
       await removeDetail({ userId, itemId });
-    } catch (error) {
+    } catch {
       // Erro já tratado no hook
     }
   };
 
   const getParticipantName = (userId: string) => {
-    const participant = bill.participants.find((p) => p.userId === userId);
+    const participant = bill.participants.find(
+      (p) => participantResolvedId(p) === userId || p.userId === userId
+    );
     return participant?.name || userId;
   };
 
@@ -162,24 +165,6 @@ export const DetailsTab = () => {
     const item = bill.items.find((i) => i.id === itemId);
     return item?.name || itemId;
   };
-
-  // Agrupar eventos por itemId e ordenar por quantityConsumed
-  const timelineByItem = useMemo(() => {
-    const grouped = new Map<string, BillDetailDto[]>();
-    
-    details.forEach((detail) => {
-      const itemDetails = grouped.get(detail.itemId) || [];
-      itemDetails.push(detail);
-      grouped.set(detail.itemId, itemDetails);
-    });
-
-    // Ordenar eventos de cada item por quantityConsumed
-    grouped.forEach((itemDetails, itemId) => {
-      itemDetails.sort((a, b) => a.quantityConsumed - b.quantityConsumed);
-    });
-
-    return grouped;
-  }, [details]);
 
   return (
     <>
@@ -194,7 +179,7 @@ export const DetailsTab = () => {
             >
               <option value="">Selecione o participante</option>
               {bill.participants.map((participant) => (
-                <option key={participant.userId} value={participant.userId}>
+                <option key={participantResolvedId(participant)} value={participantResolvedId(participant)}>
                   {participant.name}
                 </option>
               ))}

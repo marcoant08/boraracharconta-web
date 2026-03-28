@@ -4,6 +4,7 @@ import { useBill } from '@/hooks/useBill';
 import { useAuthStore } from '@/store/auth.store';
 import { ConsumptionItem } from './ConsumptionItem';
 import { useParams } from 'next/navigation';
+import { participantResolvedId } from '@/types/bill.types';
 
 export const ConsumptionsTab = () => {
   const params = useParams();
@@ -47,7 +48,7 @@ export const ConsumptionsTab = () => {
         Marque o consumo das pessoas ⬇️
       </h1>
       {bill.participants.map((participant) => (
-        <div key={participant.userId}>
+        <div key={participantResolvedId(participant)}>
           <div className="flex gap-3 items-center mb-2">
             <span className="whitespace-nowrap font-semibold text-gray-900">
               {participant.name} 👤⬇️

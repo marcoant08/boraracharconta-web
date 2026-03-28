@@ -32,7 +32,7 @@ export const AddParticipantForm = ({ billId, onSuccess }: AddParticipantFormProp
       setName('');
       toast.success('Pessoa adicionada');
       onSuccess?.();
-    } catch (error) {
+    } catch {
       // Erro já tratado no hook
     }
   };

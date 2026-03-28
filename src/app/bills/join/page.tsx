@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
+import { getAxiosErrorMessage } from '@/utils/api-error';
 import toast from 'react-hot-toast';
 
 const joinBillSchema = z.object({
@@ -18,7 +19,7 @@ const joinBillSchema = z.object({
 
 type JoinBillFormData = z.infer<typeof joinBillSchema>;
 
-export default function JoinBillPage() {
+function JoinBillContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const codeFromQuery = searchParams.get('code');
@@ -43,8 +44,8 @@ export default function JoinBillPage() {
       const response = await billService.joinBill({ code: data.code.toUpperCase() });
       toast.success('Entrou na conta com sucesso!');
       router.push(`/bills/${response.billId}`);
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Erro ao entrar na conta.';
+    } catch (error: unknown) {
+      const message = getAxiosErrorMessage(error, 'Erro ao entrar na conta.');
       toast.error(message);
     }
   };
@@ -81,5 +82,19 @@ export default function JoinBillPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function JoinBillPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <p className="text-gray-600">Carregando…</p>
+        </div>
+      }
+    >
+      <JoinBillContent />
+    </Suspense>
   );
 }

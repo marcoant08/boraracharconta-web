@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { formatCurrency } from '@/utils/format';
 import { calculateBillTotals, calculateItemDivision } from '@/utils/calculate';
 import { useParams } from 'next/navigation';
+import { participantResolvedId } from '@/types/bill.types';
 
 export const StatisticsTab = () => {
   const params = useParams();
@@ -20,10 +21,10 @@ export const StatisticsTab = () => {
       <Card title="Resumo por Participante">
         <div className="space-y-4">
           {participantTotals.map(({ participant, total }) => {
-            const isVisitor = participant.userId === participant.name;
+            const isVisitor = !participant.userId || participant.userId === participant.name;
             return (
               <div
-                key={participant.userId}
+                key={participantResolvedId(participant)}
                 className="p-4 border border-gray-200 rounded-lg"
               >
                 <div className="flex justify-between items-center">

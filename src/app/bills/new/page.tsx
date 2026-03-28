@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
+import { getAxiosErrorMessage } from '@/utils/api-error';
 import toast from 'react-hot-toast';
 
 const createBillSchema = z.object({
@@ -32,8 +33,8 @@ export default function NewBillPage() {
       const bill = await billService.createBill({ name: data.name });
       toast.success('Conta criada com sucesso!');
       router.push(`/bills/${bill.id}`);
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Erro ao criar conta.';
+    } catch (error: unknown) {
+      const message = getAxiosErrorMessage(error, 'Erro ao criar conta.');
       toast.error(message);
     }
   };

@@ -64,7 +64,7 @@ export const AddItemForm = () => {
       setItem({ name: '', price: 0, quantity: 0, category: 'Geral' });
       toast.success('Item adicionado');
       nameRef.current?.focus();
-    } catch (error) {
+    } catch {
       // Erro já tratado no hook
     }
   };

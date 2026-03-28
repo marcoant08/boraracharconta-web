@@ -8,6 +8,7 @@ import {
   VerifyEmailRequest,
   ResendVerificationCodeRequest,
 } from '@/types/auth.types';
+import { getAxiosErrorMessage } from '@/utils/api-error';
 import toast from 'react-hot-toast';
 
 export const useAuth = () => {
@@ -21,9 +22,8 @@ export const useAuth = () => {
         setAuth(response.accessToken, response.user);
         toast.success('Login realizado com sucesso!');
         router.push('/');
-      } catch (error: any) {
-        const message =
-          error.response?.data?.message || 'Erro ao fazer login. Tente novamente.';
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao fazer login. Tente novamente.');
         toast.error(message);
         throw error;
       }
@@ -36,9 +36,8 @@ export const useAuth = () => {
       await authService.register(data);
       toast.success('Conta criada! Verifique seu email para continuar.');
       return true;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message || 'Erro ao criar conta. Tente novamente.';
+    } catch (error: unknown) {
+      const message = getAxiosErrorMessage(error, 'Erro ao criar conta. Tente novamente.');
       toast.error(message);
       throw error;
     }
@@ -50,9 +49,8 @@ export const useAuth = () => {
       toast.success('Email verificado com sucesso!');
       router.push('/login');
       return true;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message || 'Código inválido. Tente novamente.';
+    } catch (error: unknown) {
+      const message = getAxiosErrorMessage(error, 'Código inválido. Tente novamente.');
       toast.error(message);
       throw error;
     }
@@ -63,9 +61,8 @@ export const useAuth = () => {
       try {
         await authService.resendVerificationCode(data);
         toast.success('Código reenviado! Verifique seu email.');
-      } catch (error: any) {
-        const message =
-          error.response?.data?.message || 'Erro ao reenviar código. Tente novamente.';
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao reenviar código. Tente novamente.');
         toast.error(message);
         throw error;
       }

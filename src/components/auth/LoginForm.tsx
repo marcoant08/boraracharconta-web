@@ -28,7 +28,7 @@ export const LoginForm = () => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data);
-    } catch (error) {
+    } catch {
       // Erro já tratado no hook
     }
   };

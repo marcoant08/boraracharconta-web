@@ -1,5 +1,12 @@
 import { create } from 'zustand';
-import { BillResponseDto, BillItemDto, ParticipantDto, ConsumptionDto, BillDetailDto } from '@/types/bill.types';
+import {
+  BillResponseDto,
+  BillItemDto,
+  ParticipantDto,
+  ConsumptionDto,
+  BillDetailDto,
+  participantResolvedId,
+} from '@/types/bill.types';
 
 interface BillState {
   currentBill: BillResponseDto | null;
@@ -97,7 +104,7 @@ export const useBillStore = create<BillState>((set) => ({
       if (!state.currentBill) return state;
       // Verificar se o participante já existe para evitar duplicatas
       const participantExists = state.currentBill.participants.some(
-        (p) => p.userId === participant.userId
+        (p) => participantResolvedId(p) === participantResolvedId(participant)
       );
       if (participantExists) return state;
       
@@ -118,7 +125,7 @@ export const useBillStore = create<BillState>((set) => ({
         currentBill: {
           ...state.currentBill,
           participants: state.currentBill.participants.filter(
-            (p) => p.userId !== participantId
+            (p) => participantResolvedId(p) !== participantId
           ),
           // Também remover consumos relacionados a este participante
           consumptions: state.currentBill.consumptions.filter(

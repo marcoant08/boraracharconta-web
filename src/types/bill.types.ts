@@ -1,7 +1,12 @@
 export interface ParticipantDto {
-  userId: string;
+  userId?: string;
   name: string;
   joinedAt: Date;
+}
+
+/** Identificador estável do participante na API (userId ou nome, para visitantes). */
+export function participantResolvedId(p: { userId?: string; name: string }): string {
+  return p.userId ?? p.name;
 }
 
 export interface BillItemDto {

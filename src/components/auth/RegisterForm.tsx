@@ -49,7 +49,7 @@ export const RegisterForm = () => {
       await registerUser(data);
       setRegisteredEmail(data.email);
       setShowVerification(true);
-    } catch (error) {
+    } catch {
       // Erro já tratado no hook
     }
   };
@@ -57,7 +57,7 @@ export const RegisterForm = () => {
   const onVerify = async (data: VerifyFormData) => {
     try {
       await verifyEmail({ email: registeredEmail, code: data.code });
-    } catch (error) {
+    } catch {
       // Erro já tratado no hook
     }
   };
@@ -65,7 +65,7 @@ export const RegisterForm = () => {
   const handleResendCode = async () => {
     try {
       await resendVerificationCode({ email: registeredEmail });
-    } catch (error) {
+    } catch {
       // Erro já tratado no hook
     }
   };

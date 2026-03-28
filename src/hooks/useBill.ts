@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBillStore } from '@/store/bill.store';
 import { billService } from '@/services/bill.service';
+import { getAxiosErrorMessage, getAxiosErrorStatus } from '@/utils/api-error';
 import toast from 'react-hot-toast';
 
 export const useBill = (billId?: string) => {
@@ -38,13 +39,13 @@ export const useBill = (billId?: string) => {
         if (!cancelled && billIdRef.current === billId) {
           setBill(bill); // setBill já define loading: false
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (!cancelled) {
-          const message = error.response?.data?.message || 'Erro ao carregar conta.';
+          const message = getAxiosErrorMessage(error, 'Erro ao carregar conta.');
           setError(message);
           setLoading(false); // Garantir que loading seja false em caso de erro
           toast.error(message);
-          if (error.response?.status === 404) {
+          if (getAxiosErrorStatus(error) === 404) {
             router.push('/');
           }
         }
@@ -67,6 +68,18 @@ export const useBill = (billId?: string) => {
     };
   }, [billId, router, setBill, setLoading, setError]);
 
+  const refetchBillQuiet = useCallback(async () => {
+    const id = billIdRef.current;
+    if (!id) return;
+    try {
+      const bill = await billService.getBill(id);
+      if (billIdRef.current === id) {
+        setBill(bill);
+      }
+    } catch {
+      // Refetch pós-mutação: não incomodar com toast; polling ou próxima ação atualiza
+    }
+  }, [setBill]);
 
   // Funções de mutação
   const addItem = useCallback(
@@ -75,13 +88,14 @@ export const useBill = (billId?: string) => {
       try {
         await billService.addItem(billId, data);
         toast.success('Item adicionado com sucesso!');
-      } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao adicionar item.';
+        await refetchBillQuiet();
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao adicionar item.');
         toast.error(message);
         throw error;
       }
     },
-    [billId]
+    [billId, refetchBillQuiet]
   );
 
   const removeItem = useCallback(
@@ -90,13 +104,14 @@ export const useBill = (billId?: string) => {
       try {
         await billService.deleteItem(billId, itemId);
         toast.success('Item removido com sucesso!');
-      } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao remover item.';
+        await refetchBillQuiet();
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao remover item.');
         toast.error(message);
         throw error;
       }
     },
-    [billId]
+    [billId, refetchBillQuiet]
   );
 
   const addConsumption = useCallback(
@@ -104,13 +119,14 @@ export const useBill = (billId?: string) => {
       if (!billId) return;
       try {
         await billService.addConsumption(billId, data);
-      } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao adicionar consumo.';
+        await refetchBillQuiet();
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao adicionar consumo.');
         toast.error(message);
         throw error;
       }
     },
-    [billId]
+    [billId, refetchBillQuiet]
   );
 
   const updateConsumption = useCallback(
@@ -118,13 +134,14 @@ export const useBill = (billId?: string) => {
       if (!billId) return;
       try {
         await billService.updateConsumption(billId, data);
-      } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao atualizar consumo.';
+        await refetchBillQuiet();
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao atualizar consumo.');
         toast.error(message);
         throw error;
       }
     },
-    [billId]
+    [billId, refetchBillQuiet]
   );
 
   const removeConsumption = useCallback(
@@ -132,13 +149,14 @@ export const useBill = (billId?: string) => {
       if (!billId) return;
       try {
         await billService.removeConsumption(billId, data);
-      } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao remover consumo.';
+        await refetchBillQuiet();
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao remover consumo.');
         toast.error(message);
         throw error;
       }
     },
-    [billId]
+    [billId, refetchBillQuiet]
   );
 
   const addParticipant = useCallback(
@@ -147,13 +165,14 @@ export const useBill = (billId?: string) => {
       try {
         await billService.addParticipant(billId, { name });
         toast.success('Participante adicionado com sucesso!');
-      } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao adicionar participante.';
+        await refetchBillQuiet();
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao adicionar participante.');
         toast.error(message);
         throw error;
       }
     },
-    [billId]
+    [billId, refetchBillQuiet]
   );
 
   const removeParticipant = useCallback(
@@ -162,13 +181,14 @@ export const useBill = (billId?: string) => {
       try {
         await billService.removeParticipant(billId, participantId);
         toast.success('Participante removido com sucesso!');
-      } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao remover participante.';
+        await refetchBillQuiet();
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao remover participante.');
         toast.error(message);
         throw error;
       }
     },
-    [billId]
+    [billId, refetchBillQuiet]
   );
 
   const addDetail = useCallback(
@@ -177,13 +197,14 @@ export const useBill = (billId?: string) => {
       try {
         await billService.addDetail(billId, data);
         toast.success('Evento adicionado com sucesso!');
-      } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao adicionar evento.';
+        await refetchBillQuiet();
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao adicionar evento.');
         toast.error(message);
         throw error;
       }
     },
-    [billId]
+    [billId, refetchBillQuiet]
   );
 
   const updateDetail = useCallback(
@@ -192,13 +213,14 @@ export const useBill = (billId?: string) => {
       try {
         await billService.updateDetail(billId, data);
         toast.success('Evento atualizado com sucesso!');
-      } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao atualizar evento.';
+        await refetchBillQuiet();
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao atualizar evento.');
         toast.error(message);
         throw error;
       }
     },
-    [billId]
+    [billId, refetchBillQuiet]
   );
 
   const removeDetail = useCallback(
@@ -207,13 +229,14 @@ export const useBill = (billId?: string) => {
       try {
         await billService.removeDetail(billId, data);
         toast.success('Detail removido com sucesso!');
-      } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao remover detail.';
+        await refetchBillQuiet();
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao remover detail.');
         toast.error(message);
         throw error;
       }
     },
-    [billId]
+    [billId, refetchBillQuiet]
   );
 
   const fetchBill = useCallback(
@@ -223,11 +246,11 @@ export const useBill = (billId?: string) => {
         setError(null);
         const bill = await billService.getBill(id);
         setBill(bill);
-      } catch (error: any) {
-        const message = error.response?.data?.message || 'Erro ao carregar conta.';
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao carregar conta.');
         setError(message);
         toast.error(message);
-        if (error.response?.status === 404) {
+        if (getAxiosErrorStatus(error) === 404) {
           router.push('/');
         }
       } finally {

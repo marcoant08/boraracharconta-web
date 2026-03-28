@@ -1,4 +1,4 @@
-import { BillResponseDto, ConsumptionDto, BillDetailDto } from '@/types/bill.types';
+import { BillResponseDto, ConsumptionDto, BillDetailDto, participantResolvedId } from '@/types/bill.types';
 import { formatCurrency } from './format';
 
 export const getParticipantConsumptions = (
@@ -53,7 +53,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
     itemConsumptions.map((c) => c.participantId)
   );
   const consumingParticipants = bill.participants.filter((p) =>
-    consumingParticipantIds.has(p.userId)
+    consumingParticipantIds.has(participantResolvedId(p))
   );
   
   // Se não há participantes consumindo o item, retornar resultado vazio
@@ -117,8 +117,9 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
 
   // Inicializar apenas participantes que consumiram o item
   consumingParticipants.forEach((p) => {
-    participantTotalsMap.set(p.userId, {
-      participantId: p.userId,
+    const pid = participantResolvedId(p);
+    participantTotalsMap.set(pid, {
+      participantId: pid,
       participantName: p.name,
       total: 0,
       breakdown: [],
@@ -152,16 +153,17 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
     // - Se primeiro evento é "join" em quantityConsumed > 0: não estava presente antes (chegou atrasado)
     // - Se primeiro evento é "left": estava presente antes (saiu depois)
     allConsumingParticipants.forEach((p) => {
-      const firstEvent = firstEventByParticipant.get(p.userId);
+      const pid = participantResolvedId(p);
+      const firstEvent = firstEventByParticipant.get(pid);
       if (!firstEvent) {
         // Sem eventos: presente desde o início
-        participantState.set(p.userId, true);
+        participantState.set(pid, true);
       } else if (firstEvent.action === 'join' && firstEvent.quantityConsumed > 0) {
         // Primeiro evento é "join" após quantityConsumed > 0: chegou atrasado, não estava presente antes
-        participantState.set(p.userId, false);
+        participantState.set(pid, false);
       } else {
         // Primeiro evento é "join" em 0 ou "left": estava presente desde o início
-        participantState.set(p.userId, true);
+        participantState.set(pid, true);
       }
     });
 
@@ -177,7 +179,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
     }
 
     // Retornar apenas participantes presentes
-    return allConsumingParticipants.filter((p) => participantState.get(p.userId) === true);
+    return allConsumingParticipants.filter((p) => participantState.get(participantResolvedId(p)) === true);
   };
 
   // Filtrar detalhes apenas para participantes que consumiram o item
@@ -231,7 +233,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
 
           // Adicionar aos participantes presentes
           presentParticipants.forEach((p) => {
-            const participantTotal = participantTotalsMap.get(p.userId);
+            const participantTotal = participantTotalsMap.get(participantResolvedId(p));
             if (participantTotal) {
               participantTotal.total += valuePerParticipant;
               participantTotal.breakdown.push({
@@ -263,7 +265,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
       });
 
       consumingParticipants.forEach((p) => {
-        const participantTotal = participantTotalsMap.get(p.userId);
+        const participantTotal = participantTotalsMap.get(participantResolvedId(p));
         if (participantTotal) {
           participantTotal.total += valuePerParticipant;
           participantTotal.breakdown.push({
@@ -293,7 +295,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
     });
 
     consumingParticipants.forEach((p) => {
-      const participantTotal = participantTotalsMap.get(p.userId);
+      const participantTotal = participantTotalsMap.get(participantResolvedId(p));
       if (participantTotal) {
         participantTotal.total += valuePerParticipant;
         participantTotal.breakdown.push({
@@ -354,7 +356,7 @@ export const calculateParticipantTotal = (
 export const calculateBillTotals = (bill: BillResponseDto) => {
   const participantTotals = bill.participants.map((p) => ({
     participant: p,
-    total: calculateParticipantTotal(bill, p.userId),
+    total: calculateParticipantTotal(bill, participantResolvedId(p)),
   }));
 
   const grandTotal = participantTotals.reduce((sum, pt) => sum + pt.total, 0);

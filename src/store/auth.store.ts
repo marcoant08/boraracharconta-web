@@ -10,7 +10,7 @@ interface AuthState {
   loadFromStorage: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   token: null,
   user: null,
   isAuthenticated: false,
@@ -41,7 +41,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       try {
         const user = JSON.parse(userStr) as User;
         set({ token, user, isAuthenticated: true });
-      } catch (error) {
+      } catch {
         // Se houver erro ao parsear, limpar storage
         localStorage.removeItem('token');
         localStorage.removeItem('user');

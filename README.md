@@ -9,7 +9,6 @@ Frontend Next.js 14+ para aplicação de divisão de contas entre amigos.
 - TypeScript
 - Tailwind CSS
 - Zustand (gerenciamento de estado)
-- Socket.io Client (WebSocket)
 - React Hook Form + Zod (formulários e validação)
 - Axios (requisições HTTP)
 - React Hot Toast (notificações)
@@ -29,6 +28,11 @@ cp .env.local.example .env.local
 Edite `.env.local` e configure:
 ```
 NEXT_PUBLIC_API_URL=http://localhost:3000
+```
+
+Opcional — intervalo do polling da conta no ecrã de detalhe (em milissegundos, entre 2000 e 5000; predefinido 3500):
+```
+NEXT_PUBLIC_BILL_POLL_INTERVAL_MS=3500
 ```
 
 3. Execute o servidor de desenvolvimento:
@@ -61,15 +65,15 @@ src/
 
 ## Funcionalidades
 
-- ✅ Autenticação (login, registro, verificação de email)
-- ✅ Criação de contas
-- ✅ Entrada por código
-- ✅ Gerenciamento de participantes
-- ✅ Gerenciamento de itens
-- ✅ Marcação de consumos
-- ✅ Cálculo automático de divisão
-- ✅ Atualizações em tempo real via WebSocket
-- ✅ Interface responsiva
+- Autenticação (login, registro, verificação de email)
+- Criação de contas
+- Entrada por código
+- Gerenciamento de participantes
+- Gerenciamento de itens
+- Marcação de consumos
+- Cálculo automático de divisão
+- Sincronização com o backend via REST: após mutações é feito refetch de `GET /bills/:id`; com o ecrã da conta aberto, há polling periódico (e pausa quando a aba está em segundo plano)
+- Interface responsiva
 
 ## Scripts
 
@@ -80,7 +84,6 @@ src/
 
 ## Notas
 
-- O token JWT é armazenado no localStorage
-- O mesmo token é usado para autenticação HTTP e WebSocket
-- Visitantes têm `userId === name`
-- Apenas participantes verificados (`userId !== name`) podem gerenciar itens e consumos
+- O token JWT é armazenado no `localStorage` e enviado em todas as rotas protegidas como `Authorization: Bearer <token>`.
+- Visitantes podem ter `userId` igual ao `name` ou apenas `name` como identificador resolvido nas chamadas à API.
+- Apenas participantes verificados (`userId` definido e diferente de `name`) podem gerenciar itens e consumos, conforme regras da API.

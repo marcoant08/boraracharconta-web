@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback, memo } from 'react';
 import { useBill } from '@/hooks/useBill';
-import { BillItemDto, ParticipantDto } from '@/types/bill.types';
+import { BillItemDto, ParticipantDto, participantResolvedId } from '@/types/bill.types';
 import { useParams } from 'next/navigation';
 
 interface ConsumptionItemProps {
@@ -14,6 +14,7 @@ export const ConsumptionItem = memo(({ item, participant }: ConsumptionItemProps
   const params = useParams();
   const billId = params.billId as string;
   const { bill, addConsumption, removeConsumption } = useBill(billId);
+  const participantId = participantResolvedId(participant);
 
   // Criar mapa de consumos para busca O(1) em vez de O(n)
   const consumptionMap = useMemo(() => {
@@ -21,28 +22,28 @@ export const ConsumptionItem = memo(({ item, participant }: ConsumptionItemProps
     const map = new Map<string, number>();
     bill.consumptions.forEach((c) => {
       if (c.itemId === item.id) {
-        map.set(c.participantId, c.quantity);
+        map.set(c.participantId, c.quantity ?? 0);
       }
     });
     return map;
   }, [bill?.consumptions, item.id]);
 
   const isSelected = useMemo(() => {
-    return (consumptionMap.get(participant.userId) || 0) > 0;
-  }, [consumptionMap, participant.userId]);
+    return (consumptionMap.get(participantId) || 0) > 0;
+  }, [consumptionMap, participantId]);
 
   const handleSelect = useCallback(async () => {
     if (!bill) return;
     try {
       if (isSelected) {
-        await removeConsumption({ participantId: participant.userId, itemId: item.id });
+        await removeConsumption({ participantId: participantId, itemId: item.id });
       } else {
-        await addConsumption({ participantId: participant.userId, itemId: item.id, quantity: 1 });
+        await addConsumption({ participantId: participantId, itemId: item.id, quantity: 1 });
       }
-    } catch (error) {
+    } catch {
       // Erro já tratado no hook
     }
-  }, [bill, isSelected, participant.userId, item.id, removeConsumption, addConsumption]);
+  }, [bill, isSelected, participantId, item.id, removeConsumption, addConsumption]);
 
   return (
     <button
@@ -59,3 +60,5 @@ export const ConsumptionItem = memo(({ item, participant }: ConsumptionItemProps
     </button>
   );
 });
+
+ConsumptionItem.displayName = 'ConsumptionItem';

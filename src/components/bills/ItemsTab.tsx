@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { AddItemForm } from './AddItemForm';
 import { formatCurrency } from '@/utils/format';
 import { useParams } from 'next/navigation';
-import { BillItemDto, ParticipantDto } from '@/types/bill.types';
+import { BillItemDto, ParticipantDto, participantResolvedId } from '@/types/bill.types';
 
 interface ItemCardProps {
   item: BillItemDto;
@@ -49,7 +49,7 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
         // Desmarcar checkbox = remover consumo
         await removeConsumption({ participantId, itemId: item.id });
       }
-    } catch (error) {
+    } catch {
       // Erro já tratado no hook
     }
   }, [bill, item.id, addConsumption, removeConsumption]);
@@ -135,12 +135,13 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
             <>
               <span className="text-sm text-gray-600">⬆️ Consumo:</span>
               {participants.map((participant) => {
-                const quantity = getCurrentQuantity(participant.userId);
+                const pid = participantResolvedId(participant);
+                const quantity = getCurrentQuantity(pid);
                 const isSelected = quantity > 0;
                 return (
                   <div
-                    key={participant.userId}
-                    onClick={() => handleCheckboxToggle(participant.userId, !isSelected)}
+                    key={pid}
+                    onClick={() => handleCheckboxToggle(pid, !isSelected)}
                     className="flex gap-2 items-center ml-6 w-fit cursor-pointer hover:opacity-70 transition-opacity"
                   >
                     <input
@@ -160,6 +161,8 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
     </div>
   );
 });
+
+ItemCard.displayName = 'ItemCard';
 
 export const ItemsTab = () => {
   const params = useParams();

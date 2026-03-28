@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatCode } from '@/utils/format';
 import Link from 'next/link';
+import { getAxiosErrorMessage } from '@/utils/api-error';
 import toast from 'react-hot-toast';
 
 export default function HomePage() {
@@ -24,8 +25,8 @@ export default function HomePage() {
       setLoading(true);
       const userBills = await billService.getBills();
       setBills(userBills);
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Erro ao carregar contas.';
+    } catch (error: unknown) {
+      const message = getAxiosErrorMessage(error, 'Erro ao carregar contas.');
       toast.error(message);
     } finally {
       setLoading(false);

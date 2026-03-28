@@ -2,6 +2,7 @@
 
 import { useBill } from '@/hooks/useBill';
 import { useAuthStore } from '@/store/auth.store';
+import { participantResolvedId } from '@/types/bill.types';
 import { AddParticipantForm } from './AddParticipantForm';
 import { useParams } from 'next/navigation';
 
@@ -20,7 +21,7 @@ export const ParticipantsTab = () => {
   const canManageParticipants = isAdmin || isVerifiedParticipant;
 
   const isVisitor = (participant: typeof bill.participants[0]) => {
-    return participant.userId === participant.name;
+    return !participant.userId || participant.userId === participant.name;
   };
 
   const canRemoveParticipant = (participant: typeof bill.participants[0]) => {
@@ -55,7 +56,7 @@ export const ParticipantsTab = () => {
           {bill.participants
             .map((participant) => (
               <div
-                key={participant.userId}
+                key={participantResolvedId(participant)}
                 className="bg-white rounded-full px-3 shadow-md flex items-center h-12"
               >
                 <div className="flex items-center gap-3 px-3 flex-1">
@@ -90,7 +91,7 @@ export const ParticipantsTab = () => {
                 </div>
                 {canRemoveParticipant(participant) ? (
                   <button
-                    onClick={() => removeParticipant(participant.userId)}
+                    onClick={() => removeParticipant(participantResolvedId(participant))}
                     className="flex items-center justify-center ml-auto w-10 h-10 cursor-pointer hover:opacity-70 transition-opacity"
                   >
                     <svg

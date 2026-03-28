@@ -4,10 +4,6 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Rotas públicas
-  const publicRoutes = ['/login', '/register'];
-  const isPublicRoute = publicRoutes.includes(pathname);
-
   // Como estamos usando localStorage (cliente), a verificação de autenticação
   // será feita nos componentes client-side. O middleware apenas permite acesso.
   // A exceção é /bills/join que pode ser acessada sem autenticação inicial
