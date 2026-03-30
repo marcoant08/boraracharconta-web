@@ -13,6 +13,8 @@ import { formatCode } from '@/utils/format';
 import Link from 'next/link';
 import { getAxiosErrorMessage } from '@/utils/api-error';
 import toast from 'react-hot-toast';
+import { SyncIcon } from '@/components/icons/SyncIcon';
+import { TrashIcon } from '@/components/icons/TrashIcon';
 
 export default function HomePage() {
   const router = useRouter();
@@ -120,12 +122,12 @@ export default function HomePage() {
             <div className="flex gap-2">
               {!deleteMode && (
                 <Button variant="secondary" size="sm" onClick={loadBills}>
-                  Atualizar
+                  <SyncIcon />
                 </Button>
               )}
               {!deleteMode && bills.length > 0 && (
                 <Button variant="secondary" size="sm" onClick={enterDeleteMode}>
-                  Deletar
+                  <TrashIcon />
                 </Button>
               )}
             </div>

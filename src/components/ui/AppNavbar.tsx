@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from './Button';
+import { ExitIcon } from '../icons/ExitIcon';
+import { UserPlusIcon } from '../icons/UserPlusIcon';
+import { HouseIcon } from '../icons/HouseIcon';
 
 interface AppNavbarProps {
   action?: 'logout' | 'back' | 'public';
@@ -18,24 +21,24 @@ export const AppNavbar = ({ action = 'back' }: AppNavbarProps) => {
     if (action === 'logout') {
       return (
         <Button variant="secondary" size="sm" onClick={logout}>
-          Sair
+          <ExitIcon />
         </Button>
       );
     }
     if (action === 'public') {
       return isAuthenticated ? (
         <Button variant="secondary" size="sm" onClick={() => router.push('/')}>
-          Voltar
+          <HouseIcon />
         </Button>
       ) : (
         <Button variant="secondary" size="sm" onClick={() => router.push('/login')}>
-          Entrar
+          <UserPlusIcon />
         </Button>
       );
     }
     return (
       <Button variant="secondary" size="sm" onClick={() => router.push('/')}>
-        Voltar
+        <HouseIcon />
       </Button>
     );
   };
@@ -45,7 +48,7 @@ export const AppNavbar = ({ action = 'back' }: AppNavbarProps) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <h1 className="text-xl font-bold text-gray-900">bora rachar conta</h1>
         <div className="flex items-center gap-3">
-          {user && <span className="text-gray-700 text-sm hidden sm:inline">Olá, {user.name}</span>}
+          {user && <span className="text-gray-700 text-sm">Olá, {user.name}</span>}
           {renderAction()}
         </div>
       </div>

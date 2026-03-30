@@ -4,6 +4,7 @@ import { useBill } from '@/hooks/useBill';
 import { participantResolvedId } from '@/types/bill.types';
 import { AddParticipantForm } from './AddParticipantForm';
 import { useParams } from 'next/navigation';
+import { UserIcon } from '../icons/UserIcon';
 
 export const ParticipantsTab = () => {
   const params = useParams();
@@ -36,19 +37,7 @@ export const ParticipantsTab = () => {
                 className="bg-white rounded-full px-3 shadow-md flex items-center h-12"
               >
                 <div className="flex items-center gap-3 px-3 flex-1">
-                  <svg
-                    className="w-5 h-5 text-gray-700"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
+                  <UserIcon />
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <h1 className="truncate text-ellipsis font-semibold text-gray-900 max-w-64">
                       {participant.name}

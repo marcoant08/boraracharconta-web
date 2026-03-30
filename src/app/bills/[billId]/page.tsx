@@ -11,6 +11,7 @@ import { AppFooter } from '@/components/ui/AppFooter';
 import { formatCode } from '@/utils/format';
 import toast from 'react-hot-toast';
 import { AppNavbar } from '@/components/ui/AppNavbar';
+import { CopyIcon } from '@/components/icons/CopyIcon';
 
 export default function BillPage() {
   const params = useParams();
@@ -83,7 +84,7 @@ export default function BillPage() {
             </div>
             <div className="flex gap-4">
               <Button variant="secondary" onClick={copyInviteLink}>
-                Copiar Link de Convite
+                <CopyIcon />
               </Button>
             </div>
           </div>

@@ -13,6 +13,7 @@ import { AppFooter } from '@/components/ui/AppFooter';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { AppNavbar } from '@/components/ui/AppNavbar';
+import { CopyIcon } from '@/components/icons/CopyIcon';
 
 const POLL_INTERVAL_MS = 10_000;
 
@@ -154,7 +155,7 @@ export default function BillCodePage() {
             </div>
             <div className="flex gap-4">
               <Button variant="secondary" onClick={copyInviteLink}>
-                Copiar Link de Convite
+                <CopyIcon />
               </Button>
             </div>
           </div>

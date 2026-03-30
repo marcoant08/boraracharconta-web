@@ -35,7 +35,7 @@ export const ConsumptionsTab = () => {
       </h1>
       {bill.participants.map((participant) => (
         <div key={participantResolvedId(participant)}>
-          <div className="flex gap-3 items-center mb-2">
+          <div className="flex gap-3 items-center mb-2 mt-4">
             <span className="whitespace-nowrap font-semibold text-gray-900">
               {participant.name} 👤⬇️
             </span>
