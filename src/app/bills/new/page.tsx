@@ -45,8 +45,9 @@ export default function NewBillPage() {
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6">
           <AppLogo />
+          <h1 className="text-2xl font-bold text-gray-900">Criar Nova Conta</h1>
         </div>
-        <Card title="Criar Nova Conta">
+        <Card>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
               label="Nome da Conta"

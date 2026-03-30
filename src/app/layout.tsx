@@ -10,12 +10,12 @@ export const metadata: Metadata = {
   title: 'Divisão de Contas',
   description: 'Aplicação para dividir contas entre amigos',
   icons: {
-    icon: '/logo.PNG',
+    icon: '/friends.PNG',
   },
   openGraph: {
     title: 'Divisão de Contas',
     description: 'Aplicação para dividir contas entre amigos',
-    images: [{ url: '/logo.PNG' }],
+    images: [{ url: '/friends.PNG' }],
   },
 };
 

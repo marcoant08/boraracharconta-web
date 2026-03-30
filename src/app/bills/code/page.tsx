@@ -47,8 +47,9 @@ function BillCodeContent() {
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6">
           <AppLogo />
+          <h1 className="text-2xl font-bold text-gray-900">Ver Conta</h1>
         </div>
-        <Card title="Ver Conta">
+        <Card>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
               label="Código da Conta"
