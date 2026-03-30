@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 
 const createBillSchema = z.object({
   name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
+  isPublic: z.boolean(),
 });
 
 type CreateBillFormData = z.infer<typeof createBillSchema>;
@@ -28,11 +29,12 @@ export default function NewBillPage() {
     formState: { errors, isSubmitting },
   } = useForm<CreateBillFormData>({
     resolver: zodResolver(createBillSchema),
+    defaultValues: { isPublic: true },
   });
 
   const onSubmit = async (data: CreateBillFormData) => {
     try {
-      const bill = await billService.createBill({ name: data.name });
+      const bill = await billService.createBill({ name: data.name, isPublic: data.isPublic });
       toast.success('Conta criada com sucesso!');
       router.push(`/bills/${bill.id}`);
     } catch (error: unknown) {
@@ -59,6 +61,15 @@ export default function NewBillPage() {
                 {...register('name')}
                 error={errors.name?.message}
               />
+
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                  {...register('isPublic')}
+                />
+                <span className="text-sm text-gray-700">Conta pública (visível por código)</span>
+              </label>
 
               <Button type="submit" variant="primary" className="w-full" loading={isSubmitting}>
                 Criar Conta

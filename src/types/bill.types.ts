@@ -46,6 +46,7 @@ export interface BillResponseDto {
 
 export interface CreateBillRequest {
   name: string;
+  isPublic: boolean;
 }
 
 export interface AddItemRequest {
