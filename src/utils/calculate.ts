@@ -230,6 +230,12 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
           steps.push({
             description: `    Cálculo: (${periodQuantity} × ${formatCurrency(valuePerUnit)}) ÷ ${presentParticipants.length} = ${formatCurrency(valuePerParticipant)} cada`,
           });
+          
+          if (i < timeline.length) {
+            steps.push({
+              description: '-',
+            });
+          }
 
           // Adicionar aos participantes presentes
           presentParticipants.forEach((p) => {
