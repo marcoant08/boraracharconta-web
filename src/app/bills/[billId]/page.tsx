@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useBill } from '@/hooks/useBill';
-import { useBillPolling } from '@/hooks/useBillPolling';
 import { useBillStore } from '@/store/bill.store';
 import { BillTabs } from '@/components/bills/BillTabs';
 import { Button } from '@/components/ui/Button';
@@ -16,7 +15,6 @@ export default function BillPage() {
   const router = useRouter();
   const billId = params.billId as string;
   const { bill, loading, error } = useBill(billId);
-  useBillPolling(billId);
   const clearBill = useBillStore((state) => state.clearBill);
 
   useEffect(() => {
@@ -28,7 +26,7 @@ export default function BillPage() {
 
   const copyInviteLink = () => {
     if (!bill) return;
-    const url = `${window.location.origin}/bills/join?code=${bill.code}`;
+    const url = `${window.location.origin}/bills/code/${bill.code}`;
     navigator.clipboard.writeText(url);
     toast.success('Link copiado para a área de transferência!');
   };

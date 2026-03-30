@@ -1,7 +1,6 @@
 'use client';
 
 import { useBill } from '@/hooks/useBill';
-import { useAuthStore } from '@/store/auth.store';
 import { ConsumptionItem } from './ConsumptionItem';
 import { useParams } from 'next/navigation';
 import { participantResolvedId } from '@/types/bill.types';
@@ -10,21 +9,8 @@ export const ConsumptionsTab = () => {
   const params = useParams();
   const billId = params.billId as string;
   const { bill } = useBill(billId);
-  const user = useAuthStore((state) => state.user);
 
   if (!bill) return null;
-
-  const isVerifiedParticipant = bill.participants.some(
-    (p) => p.userId === user?.id && p.userId !== p.name
-  );
-
-  if (!isVerifiedParticipant) {
-    return (
-      <h1 className="text-xl py-5 text-center text-gray-900">
-        Apenas participantes verificados podem gerenciar consumos.
-      </h1>
-    );
-  }
 
   if (!bill.participants.length) {
     return (

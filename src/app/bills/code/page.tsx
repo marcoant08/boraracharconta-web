@@ -1,25 +1,23 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { billService } from '@/services/bill.service';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
-import { getAxiosErrorMessage } from '@/utils/api-error';
-import toast from 'react-hot-toast';
+import { Suspense } from 'react';
 
-const joinBillSchema = z.object({
+const schema = z.object({
   code: z.string().length(7, 'Código deve ter exatamente 7 caracteres'),
 });
 
-type JoinBillFormData = z.infer<typeof joinBillSchema>;
+type FormData = z.infer<typeof schema>;
 
-function JoinBillContent() {
+function BillCodeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const codeFromQuery = searchParams.get('code');
@@ -29,8 +27,8 @@ function JoinBillContent() {
     handleSubmit,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<JoinBillFormData>({
-    resolver: zodResolver(joinBillSchema),
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
   });
 
   useEffect(() => {
@@ -39,21 +37,14 @@ function JoinBillContent() {
     }
   }, [codeFromQuery, setValue]);
 
-  const onSubmit = async (data: JoinBillFormData) => {
-    try {
-      const response = await billService.joinBill({ code: data.code.toUpperCase() });
-      toast.success('Entrou na conta com sucesso!');
-      router.push(`/bills/${response.billId}`);
-    } catch (error: unknown) {
-      const message = getAxiosErrorMessage(error, 'Erro ao entrar na conta.');
-      toast.error(message);
-    }
+  const onSubmit = (data: FormData) => {
+    router.push(`/bills/code/${data.code.toUpperCase()}`);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto">
-        <Card title="Entrar na Conta">
+        <Card title="Ver Conta">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
               label="Código da Conta"
@@ -75,7 +66,7 @@ function JoinBillContent() {
                 </Button>
               </Link>
               <Button type="submit" variant="primary" className="flex-1" loading={isSubmitting}>
-                Entrar
+                Ver Conta
               </Button>
             </div>
           </form>
@@ -85,7 +76,7 @@ function JoinBillContent() {
   );
 }
 
-export default function JoinBillPage() {
+export default function BillCodePage() {
   return (
     <Suspense
       fallback={
@@ -94,7 +85,7 @@ export default function JoinBillPage() {
         </div>
       }
     >
-      <JoinBillContent />
+      <BillCodeContent />
     </Suspense>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useBill } from '@/hooks/useBill';
-import { useAuthStore } from '@/store/auth.store';
 import { participantResolvedId } from '@/types/bill.types';
 import { AddParticipantForm } from './AddParticipantForm';
 import { useParams } from 'next/navigation';
@@ -10,35 +9,12 @@ export const ParticipantsTab = () => {
   const params = useParams();
   const billId = params.billId as string;
   const { bill, removeParticipant } = useBill(billId);
-  const user = useAuthStore((state) => state.user);
 
   if (!bill) return null;
 
-  const isAdmin = bill.adminId === user?.id;
-  const isVerifiedParticipant = bill.participants.some(
-    (p) => p.userId === user?.id && p.userId !== p.name
-  );
-  const canManageParticipants = isAdmin || isVerifiedParticipant;
-
-  const isVisitor = (participant: typeof bill.participants[0]) => {
-    return !participant.userId || participant.userId === participant.name;
-  };
-
-  const canRemoveParticipant = (participant: typeof bill.participants[0]) => {
-    // Admin: pode remover a todos, menos si mesmo
-    if (isAdmin) {
-      return participant.userId !== user?.id;
-    }
-    // Usuário comum: pode remover apenas visitantes
-    if (isVerifiedParticipant && isVisitor(participant)) {
-      return true;
-    }
-    return false;
-  };
-
   return (
     <>
-      {canManageParticipants && <AddParticipantForm billId={billId} />}
+      <AddParticipantForm billId={billId} />
 
       {bill.participants.length === 0 ? (
         <h1 className="text-xl py-5 text-center text-gray-900">
@@ -82,35 +58,26 @@ export const ParticipantsTab = () => {
                         Admin
                       </span>
                     )}
-                    {!isVisitor(participant) && bill.adminId !== participant.userId && (
-                      <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded">
-                        Autenticado
-                      </span>
-                    )}
                   </div>
                 </div>
-                {canRemoveParticipant(participant) ? (
-                  <button
-                    onClick={() => removeParticipant(participantResolvedId(participant))}
-                    className="flex items-center justify-center ml-auto w-10 h-10 cursor-pointer hover:opacity-70 transition-opacity"
+                <button
+                  onClick={() => removeParticipant(participantResolvedId(participant))}
+                  className="flex items-center justify-center ml-auto w-10 h-10 cursor-pointer hover:opacity-70 transition-opacity"
+                >
+                  <svg
+                    className="w-5 h-5 text-gray-700"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg
-                      className="w-5 h-5 text-gray-700"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                ) : (
-                  <div className="w-10 h-10 ml-auto" />
-                )}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
             ))
             .reverse()}

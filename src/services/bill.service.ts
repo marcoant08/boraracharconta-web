@@ -3,8 +3,6 @@ import {
   BillResponseDto,
   BillSummaryDto,
   CreateBillRequest,
-  JoinBillRequest,
-  JoinBillResponse,
   AddItemRequest,
   BillItemDto,
   AddParticipantRequest,
@@ -32,8 +30,8 @@ export const billService = {
     return response.data;
   },
 
-  async joinBill(data: JoinBillRequest): Promise<JoinBillResponse> {
-    const response = await api.post<JoinBillResponse>('/bills/join', data);
+  async getBillByCode(code: string): Promise<BillResponseDto> {
+    const response = await api.get<BillResponseDto>(`/bills/code/${code}`);
     return response.data;
   },
 

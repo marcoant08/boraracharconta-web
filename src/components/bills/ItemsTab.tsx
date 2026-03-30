@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useCallback, memo } from 'react';
 import { useBill } from '@/hooks/useBill';
-import { useAuthStore } from '@/store/auth.store';
 import { AddItemForm } from './AddItemForm';
 import { formatCurrency } from '@/utils/format';
 import { useParams } from 'next/navigation';
@@ -168,17 +167,12 @@ export const ItemsTab = () => {
   const params = useParams();
   const billId = params.billId as string;
   const { bill, removeItem } = useBill(billId);
-  const user = useAuthStore((state) => state.user);
 
   if (!bill) return null;
 
-  const isVerifiedParticipant = bill.participants.some(
-    (p) => p.userId === user?.id && p.userId !== p.name
-  );
-
   return (
     <>
-      {isVerifiedParticipant && <AddItemForm />}
+      <AddItemForm />
 
       {bill.items.length === 0 ? (
         <h1 className="text-xl py-5 text-center text-gray-900">
@@ -198,7 +192,7 @@ export const ItemsTab = () => {
               key={item.id}
               item={item}
               participants={bill.participants}
-              isVerifiedParticipant={isVerifiedParticipant}
+              isVerifiedParticipant={true}
               onRemove={removeItem}
             />
           )).reverse()}

@@ -6,8 +6,8 @@ export function middleware(request: NextRequest) {
 
   // Como estamos usando localStorage (cliente), a verificação de autenticação
   // será feita nos componentes client-side. O middleware apenas permite acesso.
-  // A exceção é /bills/join que pode ser acessada sem autenticação inicial
-  if (pathname.startsWith('/bills/join')) {
+  // As rotas /bills/code/* são públicas e podem ser acessadas sem autenticação.
+  if (pathname.startsWith('/bills/code')) {
     return NextResponse.next();
   }
 

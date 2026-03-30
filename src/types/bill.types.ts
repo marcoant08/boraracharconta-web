@@ -4,7 +4,7 @@ export interface ParticipantDto {
   joinedAt: Date;
 }
 
-/** Identificador estável do participante na API (userId ou nome, para visitantes). */
+/** Identificador estável do participante na API (userId ou nome). */
 export function participantResolvedId(p: { userId?: string; name: string }): string {
   return p.userId ?? p.name;
 }
@@ -35,6 +35,7 @@ export interface BillResponseDto {
   code: string;
   adminId: string;
   name: string;
+  isPublic: boolean;
   participants: ParticipantDto[];
   items: BillItemDto[];
   consumptions: ConsumptionDto[];
@@ -45,15 +46,6 @@ export interface BillResponseDto {
 
 export interface CreateBillRequest {
   name: string;
-}
-
-export interface JoinBillRequest {
-  code: string;
-}
-
-export interface JoinBillResponse {
-  billId: string;
-  message: string;
 }
 
 export interface AddItemRequest {

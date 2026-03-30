@@ -83,7 +83,7 @@ export default function HomePage() {
                 Criar Nova Conta
               </Button>
             </Link>
-            <Link href="/bills/join">
+            <Link href="/bills/code">
               <Button variant="secondary" size="lg" className="w-full sm:w-auto">
                 Entrar com Código
               </Button>

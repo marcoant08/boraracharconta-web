@@ -20,29 +20,19 @@ export const StatisticsTab = () => {
     <div className="space-y-6">
       <Card title="Resumo por Participante">
         <div className="space-y-4">
-          {participantTotals.map(({ participant, total }) => {
-            const isVisitor = !participant.userId || participant.userId === participant.name;
-            return (
-              <div
-                key={participantResolvedId(participant)}
-                className="p-4 border border-gray-200 rounded-lg"
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <span className="font-semibold text-gray-900">{participant.name}</span>
-                    {isVisitor && (
-                      <span className="ml-2 px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded">
-                        Visitante
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-lg font-bold text-primary-600">
-                    {formatCurrency(total)}
-                  </span>
-                </div>
+          {participantTotals.map(({ participant, total }) => (
+            <div
+              key={participantResolvedId(participant)}
+              className="p-4 border border-gray-200 rounded-lg"
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-gray-900">{participant.name}</span>
+                <span className="text-lg font-bold text-primary-600">
+                  {formatCurrency(total)}
+                </span>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </Card>
 

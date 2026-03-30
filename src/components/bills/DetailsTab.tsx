@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { useBill } from '@/hooks/useBill';
-import { useAuthStore } from '@/store/auth.store';
 import { useParams } from 'next/navigation';
 import { BillDetailDto, participantResolvedId } from '@/types/bill.types';
 import toast from 'react-hot-toast';
@@ -11,7 +10,6 @@ export const DetailsTab = () => {
   const params = useParams();
   const billId = params.billId as string;
   const { bill, addDetail, updateDetail, removeDetail } = useBill(billId);
-  const user = useAuthStore((state) => state.user);
 
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedItemId, setSelectedItemId] = useState<string>('');
@@ -38,12 +36,6 @@ export const DetailsTab = () => {
   }, [details]);
 
   if (!bill) return null;
-
-  const isAdmin = bill.adminId === user?.id;
-  const isVerifiedParticipant = bill.participants.some(
-    (p) => p.userId === user?.id && p.userId !== p.name
-  );
-  const canManageDetails = isAdmin || isVerifiedParticipant;
 
   // Função auxiliar para verificar se participante está na mesa em um determinado momento
   const isParticipantAtTable = (userId: string, itemId: string, atQuantity: number): boolean => {
@@ -168,9 +160,8 @@ export const DetailsTab = () => {
 
   return (
     <>
-      {canManageDetails && (
-        <div className="flex flex-col gap-3 pt-5">
-          <div className="flex gap-3">
+      <div className="flex flex-col gap-3 pt-5">
+        <div className="flex gap-3">
             <select
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
@@ -277,8 +268,7 @@ export const DetailsTab = () => {
               </button>
             )}
           </div>
-        </div>
-      )}
+      </div>
 
       {details.length === 0 ? (
         <h1 className="text-xl py-5 text-center text-gray-900">
@@ -344,8 +334,7 @@ export const DetailsTab = () => {
                           </span>
                         </div>
                       </div>
-                      {canManageDetails && (
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleEditDetail(detail)}
                             className="flex items-center justify-center w-10 h-10 cursor-pointer hover:opacity-70 transition-opacity"
@@ -383,7 +372,6 @@ export const DetailsTab = () => {
                             </svg>
                           </button>
                         </div>
-                      )}
                     </div>
                   ))}
                 </div>
