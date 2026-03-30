@@ -100,4 +100,5 @@ export interface BillSummaryDto {
   id: string;
   code: string;
   name: string;
+  isPublic: boolean;
 }

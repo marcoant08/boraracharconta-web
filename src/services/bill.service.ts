@@ -35,6 +35,10 @@ export const billService = {
     return response.data;
   },
 
+  async deleteBill(billId: string): Promise<void> {
+    await api.delete(`/bills/${billId}`);
+  },
+
   async addItem(billId: string, data: AddItemRequest): Promise<BillItemDto> {
     const response = await api.post<BillItemDto>(`/bills/${billId}/items`, data);
     return response.data;

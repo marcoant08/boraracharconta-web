@@ -19,6 +19,9 @@ export default function HomePage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [bills, setBills] = useState<BillSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState(false);
 
   const loadBills = useCallback(async () => {
     try {
@@ -32,6 +35,42 @@ export default function HomePage() {
       setLoading(false);
     }
   }, []);
+
+  const enterDeleteMode = () => {
+    setSelectedIds([]);
+    setDeleteMode(true);
+  };
+
+  const cancelDeleteMode = () => {
+    setSelectedIds([]);
+    setDeleteMode(false);
+  };
+
+  const toggleSelection = (id: string) => {
+    const next = selectedIds.includes(id)
+      ? selectedIds.filter((x) => x !== id)
+      : [...selectedIds, id];
+    setSelectedIds(next);
+  };
+
+  const confirmDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setDeleting(true);
+    try {
+      await Promise.all(selectedIds.map((id) => billService.deleteBill(id)));
+      toast.success(
+        selectedIds.length === 1 ? 'Conta excluída!' : `${selectedIds.length} contas excluídas!`
+      );
+      setDeleteMode(false);
+      setSelectedIds([]);
+      await loadBills();
+    } catch (error: unknown) {
+      const message = getAxiosErrorMessage(error, 'Erro ao excluir contas.');
+      toast.error(message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -78,9 +117,18 @@ export default function HomePage() {
         <Card>
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-semibold text-gray-900">Minhas Contas</h3>
-            <Button variant="secondary" size="sm" onClick={loadBills}>
-              Atualizar
-            </Button>
+            <div className="flex gap-2">
+              {!deleteMode && (
+                <Button variant="secondary" size="sm" onClick={loadBills}>
+                  Atualizar
+                </Button>
+              )}
+              {!deleteMode && bills.length > 0 && (
+                <Button variant="secondary" size="sm" onClick={enterDeleteMode}>
+                  Deletar
+                </Button>
+              )}
+            </div>
           </div>
 
           {loading ? (
@@ -96,37 +144,99 @@ export default function HomePage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {bills.map((bill) => (
-                <Link
-                  key={bill.id}
-                  href={`/bills/${bill.id}`}
-                  className="block p-4 border border-gray-200 rounded-lg hover:border-primary-500 hover:shadow-md transition-all"
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 mb-1">{bill.name}</h4>
-                      <p className="text-sm text-gray-600">
-                        Código: <span className="font-mono font-semibold">{formatCode(bill.code)}</span>
-                      </p>
+            <>
+              <div className="space-y-3">
+                {bills.map((bill) => {
+                  const billItem = (
+                    <div className="flex justify-between items-center">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 mb-1">{bill.name}</h4>
+                        <p className="text-sm text-gray-600 flex items-center gap-2">
+                          Código:{' '}
+                          <span className="font-mono font-semibold">{formatCode(bill.code)}</span>
+                          <span
+                            className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                              bill.isPublic
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-gray-100 text-gray-600'
+                            }`}
+                          >
+                            {bill.isPublic ? 'Pública' : 'Privada'}
+                          </span>
+                        </p>
+                      </div>
+                      {deleteMode ? (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(bill.id)}
+                          onChange={() => toggleSelection(bill.id)}
+                          className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      )}
                     </div>
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  );
+
+                  return deleteMode ? (
+                    <div
+                      key={bill.id}
+                      onClick={() => toggleSelection(bill.id)}
+                      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                        selectedIds.includes(bill.id)
+                          ? 'border-red-400 bg-red-50'
+                          : 'border-gray-200 hover:border-gray-400'
+                      }`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                      {billItem}
+                    </div>
+                  ) : (
+                    <Link
+                      key={bill.id}
+                      href={`/bills/${bill.id}`}
+                      className="block p-4 border border-gray-200 rounded-lg hover:border-primary-500 hover:shadow-md transition-all"
+                    >
+                      {billItem}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {deleteMode && (
+                <div className="flex gap-3 mt-4 pt-4 border-t border-gray-200">
+                  <Button
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={cancelDeleteMode}
+                    disabled={deleting}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="primary"
+                    className="flex-1"
+                    onClick={confirmDelete}
+                    disabled={selectedIds.length === 0 || deleting}
+                    loading={deleting}
+                  >
+                    Confirmar{selectedIds.length > 0 ? ` (${selectedIds.length})` : ''}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </Card>
 
