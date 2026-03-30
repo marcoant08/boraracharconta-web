@@ -47,7 +47,7 @@ export const ConsumptionItem = memo(({ item, participant }: ConsumptionItemProps
 
   return (
     <button
-      className="flex w-full gap-2 items-center bg-white shadow-md rounded-lg my-2 p-4 hover:shadow-lg transition-shadow"
+      className="flex w-full gap-2 items-center p-4 hover:bg-gray-50"
       onClick={handleSelect}
     >
       <input

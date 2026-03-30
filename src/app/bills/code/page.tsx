@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { AppLogo } from '@/components/ui/AppLogo';
-import Link from 'next/link';
+import { AppNavbar } from '@/components/ui/AppNavbar';
+import { AppFooter } from '@/components/ui/AppFooter';
 import { Suspense } from 'react';
 
 const schema = z.object({
@@ -43,40 +44,37 @@ function BillCodeContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto">
-        <div className="text-center mb-6">
-          <AppLogo />
-          <h1 className="text-2xl font-bold text-gray-900">Ver Conta</h1>
-        </div>
-        <Card>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Input
-              label="Código da Conta"
-              type="text"
-              placeholder="ABC1234"
-              maxLength={7}
-              {...register('code', {
-                onChange: (e) => {
-                  setValue('code', e.target.value.toUpperCase());
-                },
-              })}
-              error={errors.code?.message}
-            />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <AppNavbar action="back" />
+      <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-6">
+            <AppLogo />
+            <h1 className="text-2xl font-bold text-gray-900">Ver Conta</h1>
+          </div>
+          <Card>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <Input
+                label="Código da Conta"
+                type="text"
+                placeholder="ABC1234"
+                maxLength={7}
+                {...register('code', {
+                  onChange: (e) => {
+                    setValue('code', e.target.value.toUpperCase());
+                  },
+                })}
+                error={errors.code?.message}
+              />
 
-            <div className="flex gap-4">
-              <Link href="/" className="flex-1">
-                <Button type="button" variant="secondary" className="w-full">
-                  Voltar
-                </Button>
-              </Link>
-              <Button type="submit" variant="primary" className="flex-1" loading={isSubmitting}>
+              <Button type="submit" variant="primary" className="w-full" loading={isSubmitting}>
                 Ver Conta
               </Button>
-            </div>
-          </form>
-        </Card>
+            </form>
+          </Card>
+        </div>
       </div>
+      <AppFooter />
     </div>
   );
 }

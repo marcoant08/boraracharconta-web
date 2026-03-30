@@ -41,13 +41,15 @@ export const ConsumptionsTab = () => {
             </span>
             <div className="h-0.5 w-full bg-gray-300" />
           </div>
-          {bill.items.map((item) => (
-            <ConsumptionItem
-              key={item.id}
-              item={item}
-              participant={participant}
-            />
-          ))}
+          <div className='bg-white shadow-md rounded-lg py-3'>
+            {bill.items.map((item) => (
+              <ConsumptionItem
+                key={item.id}
+                item={item}
+                participant={participant}
+              />
+            ))}
+          </div>
         </div>
       ))}
     </div>

@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/Button';
 import { formatCurrency, formatCode } from '@/utils/format';
 import { BillParticipantSummary } from '@/components/bills/BillParticipantSummary';
 import { BillItemDetailedCalc } from '@/components/bills/BillItemDetailedCalc';
+import { AppFooter } from '@/components/ui/AppFooter';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { AppNavbar } from '@/components/ui/AppNavbar';
 
 const POLL_INTERVAL_MS = 10_000;
 
@@ -111,6 +114,13 @@ export default function BillCodePage() {
     );
   }
 
+  const copyInviteLink = () => {
+    if (!bill) return;
+    const url = `${window.location.origin}/bills/code/${bill.code}`;
+    navigator.clipboard.writeText(url);
+    toast.success('Link copiado para a área de transferência!');
+  };
+
   if (pageError === 'not_found' || !bill) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -132,6 +142,7 @@ export default function BillCodePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      <AppNavbar action="back" />
       <header className="bg-white shadow sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
@@ -141,9 +152,11 @@ export default function BillCodePage() {
                 Código: <span className="font-mono font-semibold">{formatCode(bill.code)}</span>
               </p>
             </div>
-            <Link href="/">
-              <Button variant="secondary">Voltar</Button>
-            </Link>
+            <div className="flex gap-4">
+              <Button variant="secondary" onClick={copyInviteLink}>
+                Copiar Link de Convite
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -207,6 +220,7 @@ export default function BillCodePage() {
           </>
         )}
       </main>
+      <AppFooter />
     </div>
   );
 }

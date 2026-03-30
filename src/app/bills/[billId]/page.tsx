@@ -7,8 +7,10 @@ import { useBillStore } from '@/store/bill.store';
 import { BillTabs } from '@/components/bills/BillTabs';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { AppFooter } from '@/components/ui/AppFooter';
 import { formatCode } from '@/utils/format';
 import toast from 'react-hot-toast';
+import { AppNavbar } from '@/components/ui/AppNavbar';
 
 export default function BillPage() {
   const params = useParams();
@@ -69,6 +71,7 @@ export default function BillPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      <AppNavbar action="back" />
       <header className="bg-white shadow sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
@@ -82,9 +85,6 @@ export default function BillPage() {
               <Button variant="secondary" onClick={copyInviteLink}>
                 Copiar Link de Convite
               </Button>
-              <Button variant="secondary" onClick={() => router.push('/')}>
-                Voltar
-              </Button>
             </div>
           </div>
         </div>
@@ -93,6 +93,7 @@ export default function BillPage() {
       <main className="flex-1 max-w-7xl mx-auto sm:px-6 lg:px-8 py-8 w-full">
         <BillTabs />
       </main>
+      <AppFooter />
     </div>
   );
 }

@@ -7,6 +7,8 @@ import { billService } from '@/services/bill.service';
 import { BillSummaryDto } from '@/types/bill.types';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { AppNavbar } from '@/components/ui/AppNavbar';
+import { AppFooter } from '@/components/ui/AppFooter';
 import { formatCode } from '@/utils/format';
 import Link from 'next/link';
 import { getAxiosErrorMessage } from '@/utils/api-error';
@@ -15,8 +17,6 @@ import toast from 'react-hot-toast';
 export default function HomePage() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
   const [bills, setBills] = useState<BillSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,20 +47,10 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">bora rachar conta</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-700">Olá, {user?.name}</span>
-            <Button variant="secondary" size="sm" onClick={logout}>
-              Sair
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <AppNavbar action="logout" />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
         <div className="text-center mb-12">
           <p className="text-xl text-gray-600">
             Crie uma conta e comece a dividir despesas com seus amigos
@@ -161,6 +151,7 @@ export default function HomePage() {
           </Card>
         </div>
       </main>
+      <AppFooter />
     </div>
   );
 }
