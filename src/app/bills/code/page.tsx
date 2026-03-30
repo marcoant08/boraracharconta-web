@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
+import { AppLogo } from '@/components/ui/AppLogo';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
@@ -44,6 +45,9 @@ function BillCodeContent() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto">
+        <div className="text-center mb-6">
+          <AppLogo />
+        </div>
         <Card title="Ver Conta">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input

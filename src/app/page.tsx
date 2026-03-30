@@ -50,7 +50,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Divisão de Contas</h1>
+          <h1 className="text-2xl font-bold text-gray-900">bora rachar conta</h1>
           <div className="flex items-center gap-4">
             <span className="text-gray-700">Olá, {user?.name}</span>
             <Button variant="secondary" size="sm" onClick={logout}>
@@ -62,20 +62,14 @@ export default function HomePage() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Divida suas contas facilmente
-          </h2>
           <p className="text-xl text-gray-600">
             Crie uma conta e comece a dividir despesas com seus amigos
           </p>
         </div>
 
         <Card className="text-center mb-8">
-          <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-            Dividir Conta
-          </h3>
           <p className="text-gray-600 mb-6">
-            Crie uma nova conta para dividir despesas ou entre com um código
+            Escolha uma opção para começar
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/bills/new">
@@ -85,7 +79,7 @@ export default function HomePage() {
             </Link>
             <Link href="/bills/code">
               <Button variant="secondary" size="lg" className="w-full sm:w-auto">
-                Entrar com Código
+                Ver por Código
               </Button>
             </Link>
           </div>

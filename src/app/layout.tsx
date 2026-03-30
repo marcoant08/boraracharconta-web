@@ -9,6 +9,14 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Divisão de Contas',
   description: 'Aplicação para dividir contas entre amigos',
+  icons: {
+    icon: '/logo.PNG',
+  },
+  openGraph: {
+    title: 'Divisão de Contas',
+    description: 'Aplicação para dividir contas entre amigos',
+    images: [{ url: '/logo.PNG' }],
+  },
 };
 
 export default function RootLayout({
