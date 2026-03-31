@@ -74,7 +74,7 @@ export default function BillPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <AppNavbar action="back" />
       <header className="bg-white shadow sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{bill.name}</h1>
@@ -91,7 +91,7 @@ export default function BillPage() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-1 max-w-3xl mx-auto sm:px-6 lg:px-8 py-8 w-full">
         <BillTabs />
       </main>
       <AppFooter />

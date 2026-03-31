@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/Card';
 import { AppLogo } from '@/components/ui/AppLogo';
 import { AppNavbar } from '@/components/ui/AppNavbar';
 import { AppFooter } from '@/components/ui/AppFooter';
+import { NotePencilIcon } from '@/components/icons/NotePencilIcon';
 import { getAxiosErrorMessage } from '@/utils/api-error';
 import toast from 'react-hot-toast';
 
@@ -72,7 +73,10 @@ export default function NewBillPage() {
               </label>
 
               <Button type="submit" variant="primary" className="w-full" loading={isSubmitting}>
-                Criar Conta
+                <span className="flex items-center gap-2">
+                  <NotePencilIcon size={18} />
+                  Criar Conta
+                </span>
               </Button>
             </form>
           </Card>

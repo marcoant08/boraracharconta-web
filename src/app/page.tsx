@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { AppNavbar } from '@/components/ui/AppNavbar';
 import { AppFooter } from '@/components/ui/AppFooter';
+import { NotePencilIcon } from '@/components/icons/NotePencilIcon';
 import { formatCode } from '@/utils/format';
 import Link from 'next/link';
 import { getAxiosErrorMessage } from '@/utils/api-error';
@@ -93,6 +94,10 @@ export default function HomePage() {
 
       <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
         <div className="text-center mb-12">
+          <h1 className="text-6xl text-gray-600">
+            📝
+          </h1>
+          <br />
           <p className="text-xl text-gray-600">
             Crie uma conta e comece a dividir despesas com seus amigos
           </p>
@@ -105,7 +110,10 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/bills/new">
               <Button variant="primary" size="lg" className="w-full sm:w-auto">
-                Criar Nova Conta
+                <span className="flex items-center gap-2">
+                  <NotePencilIcon size={20} />
+                  Criar Nova Conta
+                </span>
               </Button>
             </Link>
             <Link href="/bills/code">

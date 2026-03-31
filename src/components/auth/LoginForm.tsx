@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { SignInIcon } from '@/components/icons/SignInIcon';
 import Link from 'next/link';
 
 const loginSchema = z.object({
@@ -52,7 +53,10 @@ export const LoginForm = () => {
       />
 
       <Button type="submit" variant="primary" className="w-full" loading={isSubmitting}>
-        Entrar
+        <span className="flex items-center gap-2">
+          <SignInIcon size={18} />
+          Entrar
+        </span>
       </Button>
 
       <p className="text-center text-sm text-gray-600">

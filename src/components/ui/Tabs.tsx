@@ -18,6 +18,7 @@ export const Tabs = ({ tabs, activeTab, onTabChange, children }: TabsProps) => {
     <div className="w-full h-full flex flex-col relative">
       <div className="flex-1 overflow-y-auto pb-24 px-4">{children}</div>
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10">
+        <div className="max-w-3xl mx-auto">
         <nav className="flex" aria-label="Tabs">
           {tabs.map((tab) => (
             <button
@@ -37,6 +38,7 @@ export const Tabs = ({ tabs, activeTab, onTabChange, children }: TabsProps) => {
             </button>
           ))}
         </nav>
+        </div>
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
   const { bill, addConsumption, removeConsumption } = useBill(billId);
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [iconIndex, setIconIndex] = useState<number>(Math.floor(Math.random() * 4));
+  const [loadingParticipantId, setLoadingParticipantId] = useState<string | null>(null);
 
   // Criar mapa de consumos para busca O(1) em vez de O(n) para cada participante
   const consumptionMap = useMemo(() => {
@@ -38,20 +39,20 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
   }, [consumptionMap]);
 
   const handleCheckboxToggle = useCallback(async (participantId: string, checked: boolean) => {
-    if (!bill) return;
-
+    if (!bill || loadingParticipantId) return;
+    setLoadingParticipantId(participantId);
     try {
       if (checked) {
-        // Marcar checkbox = adicionar consumo com quantidade 1
         await addConsumption({ participantId, itemId: item.id, quantity: 1 });
       } else {
-        // Desmarcar checkbox = remover consumo
         await removeConsumption({ participantId, itemId: item.id });
       }
     } catch {
       // Erro já tratado no hook
+    } finally {
+      setLoadingParticipantId(null);
     }
-  }, [bill, item.id, addConsumption, removeConsumption]);
+  }, [bill, loadingParticipantId, item.id, addConsumption, removeConsumption]);
 
   return (
     <div className="">
@@ -119,15 +120,29 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
                 return (
                   <div
                     key={pid}
-                    onClick={() => handleCheckboxToggle(pid, !isSelected)}
-                    className="flex gap-2 items-center ml-6 w-fit cursor-pointer hover:opacity-70 transition-opacity"
+                    onClick={() => !loadingParticipantId && handleCheckboxToggle(pid, !isSelected)}
+                    className={`flex gap-2 items-center ml-6 w-fit transition-opacity ${loadingParticipantId ? 'cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => {}}
-                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
-                    />
+                    <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                      {loadingParticipantId === pid ? (
+                        <svg
+                          className="animate-spin h-4 w-4 text-primary-600"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {}}
+                          className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
+                        />
+                      )}
+                    </span>
                     <span className="text-sm text-gray-700">{participant.name}</span>
                   </div>
                 );

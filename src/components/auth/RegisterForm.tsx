@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
+import { UserPlusIcon } from '@/components/icons/UserPlusIcon';
 import Link from 'next/link';
 
 const registerSchema = z.object({
@@ -130,7 +131,10 @@ export const RegisterForm = () => {
       />
 
       <Button type="submit" variant="primary" className="w-full" loading={isSubmitting}>
-        Cadastrar
+        <span className="flex items-center gap-2">
+          <UserPlusIcon size={18} />
+          Cadastrar
+        </span>
       </Button>
 
       <p className="text-center text-sm text-gray-600">
