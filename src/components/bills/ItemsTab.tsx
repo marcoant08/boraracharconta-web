@@ -19,7 +19,6 @@ const ItemCard = memo(({ item, participants, isVerifiedParticipant, onRemove }: 
   const billId = params.billId as string;
   const { bill, addConsumption, removeConsumption } = useBill(billId);
   const [showDetails, setShowDetails] = useState<boolean>(false);
-  const [iconIndex, setIconIndex] = useState<number>(Math.floor(Math.random() * 4));
   const [loadingParticipantId, setLoadingParticipantId] = useState<string | null>(null);
 
   // Criar mapa de consumos para busca O(1) em vez de O(n) para cada participante
