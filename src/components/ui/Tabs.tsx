@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 interface Tab {
   id: string;
   label: string;
+  icon?: ReactNode;
 }
 
 interface TabsProps {
@@ -23,7 +24,7 @@ export const Tabs = ({ tabs, activeTab, onTabChange, children }: TabsProps) => {
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`
-                flex-1 px-4 py-4 text-sm font-medium transition-colors
+                flex-1 px-4 py-4 text-sm font-medium transition-colors flex items-center justify-center
                 ${
                   activeTab === tab.id
                     ? 'text-primary-600 bg-primary-50 border-t-2 border-primary-500'
@@ -31,7 +32,8 @@ export const Tabs = ({ tabs, activeTab, onTabChange, children }: TabsProps) => {
                 }
               `}
             >
-              {tab.label}
+              <span className="sm:hidden">{tab.icon}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </nav>
