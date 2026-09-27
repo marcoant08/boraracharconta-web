@@ -1,7 +1,7 @@
 import { BillResponseDto } from '@/types/bill.types';
 import { Card } from '@/components/ui/Card';
 import { formatCurrency } from '@/utils/format';
-import { calculateItemDivision } from '@/utils/calculate';
+import { calculateItemDivision, getItemAssignment } from '@/utils/calculate';
 
 interface Props {
   bill: BillResponseDto;
@@ -14,10 +14,16 @@ export const BillItemDetailedCalc = ({ bill }: Props) => {
         {bill.items.map((item) => {
           const division = calculateItemDivision(bill, item.id);
           if (!division || division.totalConsumed === 0) return null;
+          const assignment = getItemAssignment(bill, item.id);
 
           return (
             <div key={item.id} className="p-3 lg:p-4 border border-gray-200 rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-4 text-lg">{item.name}</h4>
+              <div className="mb-4">
+                <h4 className="font-semibold text-gray-900 text-lg">{item.name}</h4>
+                {assignment?.consequence && (
+                  <p className="text-sm text-gray-600 mt-1">{assignment.consequence}</p>
+                )}
+              </div>
 
               <div className="bg-gray-50 rounded-lg p-3 lg:p-4 mb-4">
                 <h5 className="font-semibold text-gray-900 mb-3">📊 Passo a passo do cálculo:</h5>

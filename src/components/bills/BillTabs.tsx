@@ -27,7 +27,7 @@ export const BillTabs = () => {
   return (
     <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
       {activeTab === 'participants' && <ParticipantsTab />}
-      {activeTab === 'items' && <ItemsTab />}
+      {activeTab === 'items' && <ItemsTab onGoToConsumptions={() => setActiveTab('consumptions')} />}
       {activeTab === 'consumptions' && <ConsumptionsTab />}
       {activeTab === 'details' && <DetailsTab />}
       {activeTab === 'statistics' && <StatisticsTab />}

@@ -1,7 +1,7 @@
 import { BillResponseDto, participantResolvedId } from '@/types/bill.types';
 import { Card } from '@/components/ui/Card';
 import { formatCurrency } from '@/utils/format';
-import { calculateBillTotals, getParticipantConsumptions } from '@/utils/calculate';
+import { calculateBillTotals, getConsumptionWeight, getParticipantConsumptions } from '@/utils/calculate';
 
 interface Props {
   bill: BillResponseDto;
@@ -12,10 +12,12 @@ export const BillParticipantSummary = ({ bill }: Props) => {
   const feeApplied = feeConfig.enabled;
 
   const getConsumedItems = (participantId: string) => {
-    const consumedItemIds = new Set(
-      getParticipantConsumptions(bill, participantId).map((c) => c.itemId)
-    );
-    return bill.items.filter((item) => consumedItemIds.has(item.id));
+    const consumptions = getParticipantConsumptions(bill, participantId);
+    return consumptions.flatMap((consumption) => {
+      const item = bill.items.find((i) => i.id === consumption.itemId);
+      if (!item) return [];
+      return [{ item, quantity: getConsumptionWeight(consumption) }];
+    });
   };
 
   const feeLabel =
@@ -41,12 +43,14 @@ export const BillParticipantSummary = ({ bill }: Props) => {
                 <span className="font-semibold text-gray-900">{participant.name}</span>
                 {consumedItems.length > 0 && (
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    {consumedItems.map((item) => (
+                    {consumedItems.map(({ item, quantity }) => (
                       <span
                         key={item.id}
                         className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded"
                       >
-                        {item.name}
+                        {item.quantity > 1 || quantity > 1
+                          ? `${item.name} ×${quantity}`
+                          : item.name}
                       </span>
                     ))}
                   </div>

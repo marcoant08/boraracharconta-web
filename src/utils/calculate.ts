@@ -15,6 +15,132 @@ export const getItemConsumptions = (
   return (bill.consumptions || []).filter((c) => c.itemId === itemId);
 };
 
+/** Quantidade efetiva do consumo. Registro sem qty (comandas antigas) conta como 1. */
+export const getConsumptionWeight = (consumption: { quantity?: number }): number => {
+  return typeof consumption.quantity === 'number' && consumption.quantity > 0
+    ? consumption.quantity
+    : 1;
+};
+
+export interface ItemAssignmentWeight {
+  participantId: string;
+  participantName: string;
+  quantity: number;
+}
+
+export interface ItemAssignment {
+  assigned: number;
+  itemQuantity: number;
+  weights: ItemAssignmentWeight[];
+  quantitiesDiffer: boolean;
+  matchesItemQuantity: boolean;
+  consequence: string;
+}
+
+const joinNames = (names: string[]): string => {
+  if (names.length <= 1) return names[0] ?? '';
+  if (names.length === 2) return `${names[0]} e ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}`;
+};
+
+const unitLabel = (count: number): string =>
+  count === 1 ? 'unidade' : 'unidades';
+
+const buildAssignmentConsequence = (
+  itemQuantity: number,
+  weights: ItemAssignmentWeight[],
+  assigned: number,
+  quantitiesDiffer: boolean,
+  matchesItemQuantity: boolean
+): string => {
+  if (weights.length === 0) {
+    return itemQuantity === 1
+      ? 'Marque quem dividiu este item.'
+      : 'Diga quantas unidades cada um consumiu.';
+  }
+
+  const names = joinNames(weights.map((w) => w.participantName));
+
+  if (itemQuantity === 1) {
+    if (weights.length === 1) return `${weights[0].participantName} paga este item.`;
+    return `Valor dividido entre ${names}.`;
+  }
+
+  if (quantitiesDiffer) {
+    const pays = weights.map((w) => `${w.participantName} paga ${w.quantity}`).join(', ');
+    if (matchesItemQuantity) return `${pays}.`;
+    const proportion = weights.map((w) => `${w.participantName} ${w.quantity}`).join(' : ');
+    return `${assigned} de ${itemQuantity} atribuídos. Rateio na proporção ${proportion} — ajuste se a quantidade não fecha.`;
+  }
+
+  if (weights.length === 1) {
+    if (matchesItemQuantity) return `${weights[0].participantName} paga ${weights[0].quantity}.`;
+    return `${assigned} de ${itemQuantity} atribuídos. ${weights[0].participantName} paga o item inteiro até outra pessoa ser marcada.`;
+  }
+
+  if (matchesItemQuantity) {
+    return `${itemQuantity} ${unitLabel(itemQuantity)} divididas igualmente entre ${names}.`;
+  }
+
+  return `${assigned} de ${itemQuantity} atribuídos. ${itemQuantity} ${unitLabel(itemQuantity)} divididas igualmente entre ${names}.`;
+};
+
+export const getItemAssignment = (
+  bill: BillResponseDto,
+  itemId: string
+): ItemAssignment | null => {
+  const item = bill.items.find((i) => i.id === itemId);
+  if (!item) return null;
+
+  const weights: ItemAssignmentWeight[] = [];
+  for (const consumption of getItemConsumptions(bill, itemId)) {
+    const participant = bill.participants.find(
+      (p) => participantResolvedId(p) === consumption.participantId
+    );
+    if (!participant) continue;
+    weights.push({
+      participantId: consumption.participantId,
+      participantName: participant.name,
+      quantity: getConsumptionWeight(consumption),
+    });
+  }
+
+  const assigned = weights.reduce((sum, weight) => sum + weight.quantity, 0);
+  const quantitiesDiffer = new Set(weights.map((w) => w.quantity)).size > 1;
+  const matchesItemQuantity = assigned === item.quantity;
+
+  return {
+    assigned,
+    itemQuantity: item.quantity,
+    weights,
+    quantitiesDiffer,
+    matchesItemQuantity,
+    consequence: buildAssignmentConsequence(
+      item.quantity,
+      weights,
+      assigned,
+      quantitiesDiffer,
+      matchesItemQuantity
+    ),
+  };
+};
+
+export const itemUsesQuantityWeights = (bill: BillResponseDto, itemId: string): boolean => {
+  return getItemAssignment(bill, itemId)?.quantitiesDiffer ?? false;
+};
+
+export const getParticipantItemQuantity = (
+  bill: BillResponseDto,
+  participantId: string,
+  itemId: string
+): number => {
+  const consumption = (bill.consumptions || []).find(
+    (c) => c.participantId === participantId && c.itemId === itemId
+  );
+  if (!consumption) return 0;
+  return getConsumptionWeight(consumption);
+};
+
 export interface ItemDivisionStep {
   description: string;
   value?: number;
@@ -125,6 +251,60 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
       breakdown: [],
     });
   });
+
+  const assignment = getItemAssignment(bill, itemId);
+  if (assignment?.quantitiesDiffer) {
+    const totalWeight = assignment.assigned;
+    steps.push({
+      description: `\nRateio pela quantidade de cada pessoa:`,
+    });
+
+    if (!assignment.matchesItemQuantity) {
+      steps.push({
+        description: `  ${assignment.assigned} de ${item.quantity} ${unitLabel(item.quantity)} atribuídas. O valor total ainda é rateado na proporção das quantidades.`,
+      });
+    }
+
+    assignment.weights.forEach((weight) => {
+      const share = (weight.quantity / totalWeight) * totalValue;
+      const participantTotal = participantTotalsMap.get(weight.participantId);
+      if (participantTotal) {
+        participantTotal.total += share;
+        participantTotal.breakdown.push({
+          description: `${weight.quantity}/${totalWeight} do total (${weight.quantity} ${unitLabel(weight.quantity)})`,
+          value: share,
+        });
+      }
+      steps.push({
+        description: `  ${weight.participantName}: ${weight.quantity}/${totalWeight} × ${formatCurrency(totalValue)} = ${formatCurrency(share)}`,
+      });
+    });
+
+    steps.push({
+      description: `\nTotal por participante:`,
+    });
+
+    const participantTotals = Array.from(participantTotalsMap.values()).map((pt) => {
+      steps.push({
+        description: `  • ${pt.participantName}: ${formatCurrency(pt.total)}`,
+      });
+      return pt;
+    });
+
+    return {
+      item: {
+        id: item.id,
+        name: item.name,
+        value: item.value,
+        quantity: item.quantity,
+      },
+      totalValue,
+      totalConsumed: totalQuantityConsumed,
+      valuePerUnit,
+      participantTotals,
+      steps,
+    };
+  }
 
   // Função auxiliar: construir linha do tempo ordenada por quantityConsumed
   const buildTimeline = (details: BillDetailDto[]): BillDetailDto[] => {

@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useBill } from '@/hooks/useBill';
 import { useParams } from 'next/navigation';
 import { BillDetailDto, participantResolvedId } from '@/types/bill.types';
+import { itemUsesQuantityWeights } from '@/utils/calculate';
 import toast from 'react-hot-toast';
 
 export const DetailsTab = () => {
@@ -158,8 +159,26 @@ export const DetailsTab = () => {
     return item?.name || itemId;
   };
 
+  const itemsUsingQuantityWeights = bill.items.filter((item) =>
+    itemUsesQuantityWeights(bill, item.id)
+  );
+
   return (
     <>
+      <div className="mt-5 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600">
+        <p>
+          Use esta aba quando alguém chegou ou saiu no meio de um item compartilhado — todo mundo com a mesma quantidade.
+        </p>
+        <p className="mt-1">
+          Se as quantidades em Consumos forem diferentes, o rateio daquele item usa as quantidades, não esta linha do tempo.
+        </p>
+        {itemsUsingQuantityWeights.length > 0 && (
+          <p className="mt-2 text-amber-800">
+            Rateio por quantidade ativo em:{' '}
+            {itemsUsingQuantityWeights.map((item) => item.name).join(', ')}.
+          </p>
+        )}
+      </div>
       <div className="flex flex-col gap-3 pt-5">
         <div className="flex gap-3">
             <select
@@ -283,10 +302,15 @@ export const DetailsTab = () => {
           <div className="flex flex-col gap-4">
             {Array.from(timelineByItem.entries()).map(([itemId, itemDetails]) => (
               <div key={itemId} className="bg-white rounded-lg shadow-md p-4">
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">
+                <h2 className="text-lg font-semibold text-gray-900">
                   {getItemName(itemId)}
                 </h2>
-                <div className="flex flex-col gap-2">
+                {itemUsesQuantityWeights(bill, itemId) && (
+                  <p className="text-sm text-amber-800 mt-1">
+                    Este item usa as quantidades de Consumos. Estes eventos não entram no rateio.
+                  </p>
+                )}
+                <div className="flex flex-col gap-2 mt-3">
                   {itemDetails.map((detail, index) => (
                     <div
                       key={`${detail.userId}-${detail.itemId}-${detail.quantityConsumed}-${index}`}
