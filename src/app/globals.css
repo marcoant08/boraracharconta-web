@@ -85,3 +85,96 @@ input[type='radio'] {
     animation: none;
   }
 }
+
+@keyframes tab-slide-in-forward {
+  from { transform: translate3d(100%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes tab-slide-out-forward {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-100%, 0, 0); }
+}
+
+@keyframes tab-slide-in-back {
+  from { transform: translate3d(-100%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes tab-slide-out-back {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(100%, 0, 0); }
+}
+
+@keyframes tab-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes tab-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Opacidade acompanha o deslocamento e chega a 0 quando a aba percorreu 70%. */
+@keyframes tab-slide-fade {
+  0% { opacity: 1; }
+  1% { opacity: 0.912; }
+  2% { opacity: 0.828; }
+  3% { opacity: 0.748; }
+  4% { opacity: 0.671; }
+  5% { opacity: 0.598; }
+  6% { opacity: 0.530; }
+  7% { opacity: 0.465; }
+  8% { opacity: 0.404; }
+  9% { opacity: 0.347; }
+  10% { opacity: 0.294; }
+  11% { opacity: 0.244; }
+  12% { opacity: 0.197; }
+  13% { opacity: 0.154; }
+  14% { opacity: 0.114; }
+  15% { opacity: 0.077; }
+  16% { opacity: 0.042; }
+  17.5% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+.tab-slide-in-forward,
+.tab-slide-out-forward,
+.tab-slide-in-back,
+.tab-slide-out-back {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+  will-change: transform;
+}
+
+.tab-slide-in-forward { animation-name: tab-slide-in-forward; }
+.tab-slide-in-back { animation-name: tab-slide-in-back; }
+
+.tab-slide-out-forward,
+.tab-slide-out-back {
+  animation-duration: 320ms, 320ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1), linear;
+  will-change: transform, opacity;
+}
+
+.tab-slide-out-forward { animation-name: tab-slide-out-forward, tab-slide-fade; }
+.tab-slide-out-back { animation-name: tab-slide-out-back, tab-slide-fade; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-slide-in-forward,
+  .tab-slide-in-back {
+    animation-name: tab-fade-in;
+    animation-duration: 180ms;
+    will-change: opacity;
+  }
+
+  .tab-slide-out-forward,
+  .tab-slide-out-back {
+    animation-name: tab-fade-out;
+    animation-duration: 140ms;
+    animation-timing-function: ease;
+    will-change: opacity;
+  }
+}

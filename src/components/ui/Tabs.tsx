@@ -58,7 +58,7 @@ export const Tabs = ({ tabs, activeTab, onTabChange, children }: TabsProps) => {
 
   return (
     <div className="w-full h-full flex flex-col relative">
-      <div className="flex-1 overflow-y-auto pb-36 px-4">{children}</div>
+      <div className="flex-1 overflow-x-hidden overflow-y-auto pb-36 px-4">{children}</div>
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-card z-10">
         <div className="max-w-3xl mx-auto">
           <nav className="relative flex" aria-label="Etapas da conta">

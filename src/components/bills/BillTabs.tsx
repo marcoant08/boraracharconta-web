@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, type AnimationEvent } from 'react';
 import { Tabs } from '@/components/ui/Tabs';
 import { useBillStore } from '@/store/bill.store';
 import { isConsumptionStepComplete } from '@/utils/calculate';
@@ -23,9 +23,12 @@ const tabDefs = [
   { id: 'statistics', label: 'Cálculos', icon: <ChartPieSliceIcon size={26} /> },
 ] as const;
 
+const SLIDE_MS = 320;
+
 export const BillTabs = () => {
   const [activeTab, setActiveTab] = useState<string>('participants');
   const [revealConsumptionGaps, setRevealConsumptionGaps] = useState(false);
+  const [motion, setMotion] = useState<{ leaving: string; direction: 'forward' | 'back' } | null>(null);
   const bill = useBillStore((state) => state.currentBill);
 
   const participantsComplete = (bill?.participants.length ?? 0) > 0;
@@ -51,37 +54,89 @@ export const BillTabs = () => {
   }));
 
   const changeTab = (tabId: string) => {
+    if (tabId === activeTab) return;
     if (
       activeTab === 'consumptions' &&
-      tabId !== 'consumptions' &&
       participantsComplete &&
       itemsComplete &&
       !consumptionsComplete
     ) {
       setRevealConsumptionGaps(true);
     }
+    const nextIndex = tabDefs.findIndex((tab) => tab.id === tabId);
+    setMotion({
+      leaving: activeTab,
+      direction: nextIndex > activeIndex ? 'forward' : 'back',
+    });
     setActiveTab(tabId);
   };
 
-  return (
-    <Tabs tabs={tabs} activeTab={activeTab} onTabChange={changeTab}>
-      {activeTab === 'participants' && <ParticipantsTab />}
-      {activeTab === 'items' && <ItemsTab onGoToConsumptions={() => changeTab('consumptions')} />}
-      {activeTab === 'consumptions' && (
+  useEffect(() => {
+    if (!motion) return;
+    const timer = window.setTimeout(() => setMotion(null), SLIDE_MS + 80);
+    return () => window.clearTimeout(timer);
+  }, [motion]);
+
+  const finishSlide = (event: AnimationEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) {
+      if (event.animationName !== 'tab-fade-out') return;
+    } else if (!event.animationName.startsWith('tab-slide-out')) {
+      return;
+    }
+    setMotion(null);
+  };
+
+  const renderTab = (tabId: string) => {
+    if (tabId === 'participants') return <ParticipantsTab />;
+    if (tabId === 'items') return <ItemsTab onGoToConsumptions={() => changeTab('consumptions')} />;
+    if (tabId === 'consumptions') {
+      return (
         <ConsumptionsTab
           showGaps={revealConsumptionGaps}
           onGoToParticipants={() => changeTab('participants')}
           onGoToItems={() => changeTab('items')}
         />
-      )}
-      {activeTab === 'details' && <DetailsTab />}
-      {activeTab === 'statistics' && (
-        <StatisticsTab
-          onGoToParticipants={() => setActiveTab('participants')}
-          onGoToItems={() => setActiveTab('items')}
-          onGoToConsumptions={() => setActiveTab('consumptions')}
-        />
-      )}
+      );
+    }
+    if (tabId === 'details') return <DetailsTab />;
+    return (
+      <StatisticsTab
+        onGoToParticipants={() => changeTab('participants')}
+        onGoToItems={() => changeTab('items')}
+        onGoToConsumptions={() => changeTab('consumptions')}
+      />
+    );
+  };
+
+  const incomingClass =
+    motion?.direction === 'forward'
+      ? 'tab-slide-in-forward'
+      : motion?.direction === 'back'
+        ? 'tab-slide-in-back'
+        : '';
+
+  return (
+    <Tabs tabs={tabs} activeTab={activeTab} onTabChange={changeTab}>
+      <div className="grid">
+        {motion && (
+          <div
+            key={motion.leaving}
+            inert
+            aria-hidden
+            onAnimationEnd={finishSlide}
+            className={`col-start-1 row-start-1 pointer-events-none ${
+              motion.direction === 'forward' ? 'tab-slide-out-forward' : 'tab-slide-out-back'
+            }`}
+          >
+            {renderTab(motion.leaving)}
+          </div>
+        )}
+        <div key={activeTab} className={`col-start-1 row-start-1 ${incomingClass}`}>
+          {renderTab(activeTab)}
+        </div>
+      </div>
     </Tabs>
   );
 };
