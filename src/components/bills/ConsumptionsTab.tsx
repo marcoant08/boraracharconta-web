@@ -96,20 +96,22 @@ export const ConsumptionsTab = ({
 
   const gaps = showGaps ? getConsumptionGaps(bill) : { people: [], items: [] };
 
+  const hasGaps = gaps.people.length > 0 || gaps.items.length > 0;
+
   return (
     <div className="flex flex-col gap-3">
-      <h1 className="text-xl py-5 text-center text-gray-900">
-        Quanto cada um consumiu
+      <h1 className={`text-xl text-center text-gray-900 ${hasGaps ? 'pt-5 pb-2' : 'py-5'}`}>
+        Marque o que cada um consumiu
       </h1>
-      {gaps.people.length > 0 && (
-        <p className="text-center text-base font-medium text-red-700 text-balance">
-          {joinNames(gaps.people)} ainda não {gaps.people.length === 1 ? 'consumiu' : 'consumiram'} nenhum item.
-        </p>
-      )}
-      {gaps.items.length > 0 && (
-        <p className="text-center text-base font-medium text-red-700 text-balance">
-          Ninguém consumiu {joinNames(gaps.items)}.
-        </p>
+      {hasGaps && (
+        <div className="pb-3 text-center text-sm leading-5 text-red-700/80 text-balance">
+          {gaps.people.length > 0 && (
+            <p>
+              {joinNames(gaps.people)} ainda não {gaps.people.length === 1 ? 'consumiu' : 'consumiram'} nenhum item.
+            </p>
+          )}
+          {gaps.items.length > 0 && <p>Ninguém consumiu {joinNames(gaps.items)}.</p>}
+        </div>
       )}
       {bill.items.map((item) => {
         const assignment = getItemAssignment(bill, item.id);
