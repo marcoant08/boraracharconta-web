@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { useBill } from '@/hooks/useBill';
 import { capitalize } from '@/utils/format';
 import toast from 'react-hot-toast';
@@ -10,23 +10,43 @@ interface AddParticipantFormProps {
   onSuccess?: () => void;
 }
 
+const CheckIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={20}
+    height={20}
+    fill="currentColor"
+    viewBox="0 0 256 256"
+    aria-hidden="true"
+  >
+    <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />
+  </svg>
+);
+
 export const AddParticipantForm = ({ billId, onSuccess }: AddParticipantFormProps) => {
   const { bill, addParticipant } = useBill(billId);
   const [name, setName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const canSubmit = name.trim().length > 0;
 
   const onAddParticipant = async () => {
-    if (name.trim().length === 0) {
-      return toast.error('Adicione o nome da pessoa');
+    if (!canSubmit) {
+      toast.error('Adicione o nome da pessoa');
+      return;
     }
 
     const participantExists = bill?.participants.some(
-      (p) => p.name.toLowerCase() === name.trim().toLowerCase()
+      (participant) => participant.name.toLowerCase() === name.trim().toLowerCase()
     );
 
     if (participantExists) {
-      return toast.error(`'${name}' já foi adicionado`);
+      toast.error(`'${name}' já foi adicionado`);
+      return;
     }
 
+    if (submitting) return;
+
+    setSubmitting(true);
     try {
       await addParticipant(capitalize(name.trim()));
       setName('');
@@ -34,39 +54,39 @@ export const AddParticipantForm = ({ billId, onSuccess }: AddParticipantFormProp
       onSuccess?.();
     } catch {
       // Erro já tratado no hook
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  const onSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    void onAddParticipant();
+  };
+
   return (
-    <div className="flex gap-5 w-full justify-between pt-5">
+    <form onSubmit={onSubmit} className="flex items-center gap-3 pt-5">
       <input
         type="text"
+        name="participant-name"
         placeholder="Digite o nome da pessoa..."
         value={name}
-        onChange={(e) => setName(e.target.value)}
-        onKeyUp={(e) => {
-          if (['Enter', 'NumpadEnter'].includes(e.code)) onAddParticipant();
-        }}
-        className="bg-white w-full rounded-full shadow-md p-4 outline-none disabled:bg-gray-300 text-gray-900 placeholder-gray-500"
+        aria-label="Nome da pessoa"
+        autoComplete="off"
+        onChange={(event) => setName(event.target.value)}
+        className="bg-white w-full h-14 min-w-0 flex-1 rounded-full shadow-md px-5 outline-none text-gray-900 placeholder:text-gray-600 focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50"
       />
       <button
-        onClick={onAddParticipant}
-        className="bg-primary-500 shadow-lg p-4 justify-center items-center rounded-full flex ml-auto hover:opacity-90 transition-opacity"
+        type="submit"
+        disabled={submitting}
+        aria-disabled={!canSubmit || submitting}
+        aria-label="Adicionar pessoa"
+        className={`shrink-0 h-14 w-14 justify-center items-center rounded-full flex bg-primary-500 text-white shadow-lg transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50 disabled:cursor-not-allowed disabled:opacity-40 ${
+          canSubmit ? 'hover:opacity-90' : 'opacity-40'
+        }`}
       >
-        <svg
-          className="w-5 h-5 text-white"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-          />
-        </svg>
+        <CheckIcon />
       </button>
-    </div>
+    </form>
   );
 };
