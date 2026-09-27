@@ -75,20 +75,19 @@ export const AddItemForm = () => {
   const nameRef = useRef<HTMLInputElement | null>(null);
   const priceRef = useRef<HTMLInputElement | null>(null);
   const quantityRef = useRef<HTMLInputElement | null>(null);
-  const skipInitialFocus = useRef(true);
+  const focusOnStepChange = useRef(false);
 
   const quantity = parseQuantity(quantityText);
 
   useEffect(() => {
-    if (skipInitialFocus.current) {
-      skipInitialFocus.current = false;
-      return;
-    }
+    if (!focusOnStepChange.current) return;
+    focusOnStepChange.current = false;
     const field = step === 'name' ? nameRef : step === 'price' ? priceRef : quantityRef;
     field.current?.focus();
   }, [step]);
 
   const goTo = (next: Step, nextDirection: 'forward' | 'back') => {
+    focusOnStepChange.current = true;
     setDirection(nextDirection);
     setStep(next);
   };
