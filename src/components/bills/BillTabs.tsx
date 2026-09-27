@@ -20,7 +20,7 @@ const tabDefs = [
   { id: 'items', label: 'Itens', icon: <ShoppingCartIcon size={26} /> },
   { id: 'consumptions', label: 'Consumos', icon: <UserCheckIcon size={26} /> },
   { id: 'details', label: 'Detalhes', icon: <ClockUserIcon size={26} /> },
-  { id: 'statistics', label: 'Estatísticas', icon: <ChartPieSliceIcon size={26} /> },
+  { id: 'statistics', label: 'Cálculos', icon: <ChartPieSliceIcon size={26} /> },
 ] as const;
 
 export const BillTabs = () => {

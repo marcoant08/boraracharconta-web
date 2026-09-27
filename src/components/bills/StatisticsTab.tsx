@@ -80,7 +80,7 @@ export const StatisticsTab = ({
           É preciso preencher {joinSteps(missingSteps.map((step) => (
             <TabLink key={step.label} label={step.label} onClick={step.onClick} />
           )))}{' '}
-          para ver as estatísticas.
+          para ver os cálculos.
         </h1>
         {(gaps.people.length > 0 || gaps.items.length > 0) && (
           <div className="mt-2 text-sm leading-5 text-red-700/80 text-balance">
