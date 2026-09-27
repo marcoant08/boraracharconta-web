@@ -8,7 +8,8 @@ interface Props {
 }
 
 export const BillParticipantSummary = ({ bill }: Props) => {
-  const { participantTotals, grandTotal } = calculateBillTotals(bill);
+  const { participantTotals, subtotal, serviceFee, grandTotal, feeConfig } = calculateBillTotals(bill);
+  const feeApplied = feeConfig.enabled;
 
   const getConsumedItems = (participantId: string) => {
     const consumedItemIds = new Set(
@@ -16,6 +17,13 @@ export const BillParticipantSummary = ({ bill }: Props) => {
     );
     return bill.items.filter((item) => consumedItemIds.has(item.id));
   };
+
+  const feeLabel =
+    feeConfig.enabled && feeConfig.type === 'percent'
+      ? `inclui taxa ${feeConfig.percent}%`
+      : feeConfig.enabled
+        ? 'inclui taxa'
+        : null;
 
   return (
     <Card title="Resumo por Participante">
@@ -33,7 +41,6 @@ export const BillParticipantSummary = ({ bill }: Props) => {
                 <span className="font-semibold text-gray-900">{participant.name}</span>
                 {consumedItems.length > 0 && (
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs text-gray-500 shrink-0">itens consumidos:</span>
                     {consumedItems.map((item) => (
                       <span
                         key={item.id}
@@ -45,10 +52,32 @@ export const BillParticipantSummary = ({ bill }: Props) => {
                   </div>
                 )}
               </div>
-              <span className="text-lg font-bold text-primary-600 shrink-0">{formatCurrency(total)}</span>
+              <div className="text-right shrink-0">
+                <span className="text-lg font-bold text-primary-600">{formatCurrency(total)}</span>
+                {feeLabel && <p className="text-xs text-gray-500">{feeLabel}</p>}
+              </div>
             </div>
           );
         })}
+        {feeApplied && (
+          <div className="space-y-1 px-1 text-sm text-gray-600">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{formatCurrency(subtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>
+                Taxa de serviço
+                {feeConfig.enabled && feeConfig.type === 'percent'
+                  ? ` (${feeConfig.percent}%)`
+                  : feeConfig.enabled && feeConfig.type === 'fixed'
+                    ? ' (valor fixo)'
+                    : ''}
+              </span>
+              <span>{formatCurrency(serviceFee)}</span>
+            </div>
+          </div>
+        )}
         <div className="flex justify-between items-center p-4 bg-primary-50 rounded-lg mt-2">
           <span className="text-lg font-semibold text-gray-900">Total Geral</span>
           <span className="text-2xl font-bold text-primary-600">{formatCurrency(grandTotal)}</span>

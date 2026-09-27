@@ -359,16 +359,67 @@ export const calculateParticipantTotal = (
   return total;
 };
 
-export const calculateBillTotals = (bill: BillResponseDto) => {
-  const participantTotals = bill.participants.map((p) => ({
-    participant: p,
-    total: calculateParticipantTotal(bill, participantResolvedId(p)),
-  }));
+export const SERVICE_FEE_MIN = 10;
+export const SERVICE_FEE_MAX = 30;
+export const SERVICE_FEE_DEFAULT = 10;
 
-  const grandTotal = participantTotals.reduce((sum, pt) => sum + pt.total, 0);
+export const clampServiceFeePercent = (value: number): number => {
+  if (!Number.isFinite(value)) return SERVICE_FEE_DEFAULT;
+  return Math.min(SERVICE_FEE_MAX, Math.max(SERVICE_FEE_MIN, Math.round(value)));
+};
+
+export type AppliedServiceFee =
+  | { enabled: false }
+  | { enabled: true; type: 'percent'; percent: number }
+  | { enabled: true; type: 'fixed'; fixedValue: number };
+
+export const getAppliedServiceFee = (bill: BillResponseDto): AppliedServiceFee => {
+  if (!bill.serviceFeeEnabled) return { enabled: false };
+  if (bill.serviceFeeType === 'percent' && bill.serviceFeePercent) {
+    return { enabled: true, type: 'percent', percent: bill.serviceFeePercent };
+  }
+  if (bill.serviceFeeType === 'fixed' && bill.serviceFeeFixedValue) {
+    return { enabled: true, type: 'fixed', fixedValue: bill.serviceFeeFixedValue };
+  }
+  return { enabled: false };
+};
+
+export const isServiceFeeApplied = (bill: BillResponseDto): boolean => {
+  return getAppliedServiceFee(bill).enabled;
+};
+
+export const calculateBillTotals = (bill: BillResponseDto) => {
+  const feeConfig = getAppliedServiceFee(bill);
+  const participantCount = Math.max(bill.participants.length, 1);
+  const fixedShare =
+    feeConfig.enabled && feeConfig.type === 'fixed' ? feeConfig.fixedValue / participantCount : 0;
+
+  const participantTotals = bill.participants.map((p) => {
+    const subtotal = calculateParticipantTotal(bill, participantResolvedId(p));
+    let fee = 0;
+    if (feeConfig.enabled && feeConfig.type === 'percent') {
+      fee = subtotal * (feeConfig.percent / 100);
+    } else if (feeConfig.enabled && feeConfig.type === 'fixed') {
+      fee = fixedShare;
+    }
+    return {
+      participant: p,
+      subtotal,
+      fee,
+      total: subtotal + fee,
+    };
+  });
+
+  const subtotal = participantTotals.reduce((sum, pt) => sum + pt.subtotal, 0);
+  const serviceFee = participantTotals.reduce((sum, pt) => sum + pt.fee, 0);
+  const grandTotal = subtotal + serviceFee;
 
   return {
     participantTotals,
+    subtotal,
+    serviceFee,
     grandTotal,
+    feeConfig,
+    fixedShare,
   };
 };

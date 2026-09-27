@@ -12,6 +12,7 @@ import {
   AddDetailRequest,
   UpdateDetailRequest,
   RemoveDetailRequest,
+  UpdateServiceFeeRequest,
 } from '@/types/bill.types';
 
 export const billService = {
@@ -78,5 +79,10 @@ export const billService = {
 
   async removeDetail(billId: string, data: RemoveDetailRequest): Promise<void> {
     await api.delete(`/bills/${billId}/details`, { data });
+  },
+
+  async updateServiceFee(billId: string, data: UpdateServiceFeeRequest): Promise<BillResponseDto> {
+    const response = await api.put<BillResponseDto>(`/bills/${billId}/service-fee`, data);
+    return response.data;
   },
 };

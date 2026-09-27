@@ -245,6 +245,22 @@ export const useBill = (billId?: string) => {
     [billId, storeRemoveDetail]
   );
 
+  const updateServiceFee = useCallback(
+    async (data: { enabled: boolean; type?: 'percent' | 'fixed'; percent?: number; fixedValue?: number }) => {
+      if (!billId) return;
+      try {
+        const updated = await billService.updateServiceFee(billId, data);
+        setBill(updated);
+        toast.success(data.enabled ? 'Taxa de serviço aplicada!' : 'Taxa de serviço removida.');
+      } catch (error: unknown) {
+        const message = getAxiosErrorMessage(error, 'Erro ao atualizar taxa de serviço.');
+        toast.error(message);
+        throw error;
+      }
+    },
+    [billId, setBill]
+  );
+
   const fetchBill = useCallback(
     async (id: string) => {
       try {
@@ -282,5 +298,6 @@ export const useBill = (billId?: string) => {
     addDetail,
     updateDetail,
     removeDetail,
+    updateServiceFee,
   };
 };

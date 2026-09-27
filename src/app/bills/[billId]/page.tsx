@@ -12,12 +12,13 @@ import { formatCode } from '@/utils/format';
 import toast from 'react-hot-toast';
 import { AppNavbar } from '@/components/ui/AppNavbar';
 import { CopyIcon } from '@/components/icons/CopyIcon';
+import { ServiceFeeToggle } from '@/components/bills/ServiceFeeToggle';
 
 export default function BillPage() {
   const params = useParams();
   const router = useRouter();
   const billId = params.billId as string;
-  const { bill, loading, error } = useBill(billId);
+  const { bill, loading, error, updateServiceFee } = useBill(billId);
   const clearBill = useBillStore((state) => state.clearBill);
 
   useEffect(() => {
@@ -38,7 +39,20 @@ export default function BillPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <svg
+            className="animate-spin h-12 w-12 text-primary-600 mx-auto"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
           <p className="mt-4 text-gray-600">Carregando conta...</p>
         </div>
       </div>
@@ -81,6 +95,7 @@ export default function BillPage() {
               <p className="text-gray-600 mt-1">
                 Código: <span className="font-mono font-semibold">{formatCode(bill.code)}</span>
               </p>
+              <ServiceFeeToggle bill={bill} canConfigure onUpdate={updateServiceFee} />
             </div>
             <div className="flex gap-4">
               <Button variant="secondary" onClick={copyInviteLink}>

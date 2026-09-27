@@ -9,11 +9,16 @@ import { Button } from '@/components/ui/Button';
 import { formatCurrency, formatCode } from '@/utils/format';
 import { BillParticipantSummary } from '@/components/bills/BillParticipantSummary';
 import { BillItemDetailedCalc } from '@/components/bills/BillItemDetailedCalc';
+import { ServiceFeeCard } from '@/components/bills/ServiceFeeCard';
 import { AppFooter } from '@/components/ui/AppFooter';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { AppNavbar } from '@/components/ui/AppNavbar';
 import { CopyIcon } from '@/components/icons/CopyIcon';
+import { ServiceFeeToggle } from '@/components/bills/ServiceFeeToggle';
+import { useAuthStore } from '@/store/auth.store';
+import { UpdateServiceFeeRequest } from '@/types/bill.types';
+import { getAxiosErrorMessage } from '@/utils/api-error';
 
 const POLL_INTERVAL_MS = 10_000;
 
@@ -26,6 +31,7 @@ export default function BillCodePage() {
   const [bill, setBill] = useState<BillResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState<PageError>(null);
+  const user = useAuthStore((state) => state.user);
 
   const billRef = useRef<BillResponseDto | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -89,7 +95,20 @@ export default function BillCodePage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto" />
+          <svg
+            className="animate-spin h-12 w-12 text-primary-600 mx-auto"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
           <p className="mt-4 text-gray-600">Carregando conta...</p>
         </div>
       </div>
@@ -122,6 +141,19 @@ export default function BillCodePage() {
     toast.success('Link copiado para a área de transferência!');
   };
 
+  const updateServiceFee = async (data: UpdateServiceFeeRequest) => {
+    if (!bill) return;
+    try {
+      const updated = await billService.updateServiceFee(bill.id, data);
+      billRef.current = updated;
+      setBill(updated);
+      toast.success(data.enabled ? 'Taxa de serviço aplicada!' : 'Taxa de serviço removida.');
+    } catch (error: unknown) {
+      toast.error(getAxiosErrorMessage(error, 'Erro ao atualizar taxa de serviço.'));
+      throw error;
+    }
+  };
+
   if (pageError === 'not_found' || !bill) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -152,6 +184,11 @@ export default function BillCodePage() {
               <p className="text-gray-600 mt-1">
                 Código: <span className="font-mono font-semibold">{formatCode(bill.code)}</span>
               </p>
+              <ServiceFeeToggle
+                bill={bill}
+                canConfigure={user?.id === bill.adminId}
+                onUpdate={updateServiceFee}
+              />
             </div>
             <div className="flex gap-4">
               <Button variant="secondary" onClick={copyInviteLink}>
@@ -217,6 +254,7 @@ export default function BillCodePage() {
         {bill.participants.length > 0 && bill.items.length > 0 && (
           <>
             <BillParticipantSummary bill={bill} />
+            <ServiceFeeCard bill={bill} />
             <BillItemDetailedCalc bill={bill} />
           </>
         )}

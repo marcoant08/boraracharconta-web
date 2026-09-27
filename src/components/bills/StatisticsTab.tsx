@@ -4,6 +4,7 @@ import { useBill } from '@/hooks/useBill';
 import { useParams } from 'next/navigation';
 import { BillParticipantSummary } from './BillParticipantSummary';
 import { BillItemDetailedCalc } from './BillItemDetailedCalc';
+import { ServiceFeeCard } from './ServiceFeeCard';
 
 export const StatisticsTab = () => {
   const params = useParams();
@@ -15,6 +16,7 @@ export const StatisticsTab = () => {
   return (
     <div className="space-y-6">
       <BillParticipantSummary bill={bill} />
+      <ServiceFeeCard bill={bill} />
       <BillItemDetailedCalc bill={bill} />
     </div>
   );

@@ -33,7 +33,6 @@ export const useBillStore = create<BillState>((set) => ({
   currentBill: null,
   loading: false,
   error: null,
-
   setBill: (bill: BillResponseDto) => {
     console.log('[bill]', bill);
     set((state) => ({

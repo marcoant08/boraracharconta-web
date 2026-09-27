@@ -30,6 +30,8 @@ export interface BillDetailDto {
   action: 'join' | 'left';  // Entrar ou sair da mesa
 }
 
+export type ServiceFeeType = 'percent' | 'fixed';
+
 export interface BillResponseDto {
   id: string;
   code: string;
@@ -40,8 +42,19 @@ export interface BillResponseDto {
   items: BillItemDto[];
   consumptions: ConsumptionDto[];
   details: BillDetailDto[];
+  serviceFeeEnabled?: boolean;
+  serviceFeeType?: ServiceFeeType | null;
+  serviceFeePercent?: number | null;
+  serviceFeeFixedValue?: number | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface UpdateServiceFeeRequest {
+  enabled: boolean;
+  type?: ServiceFeeType;
+  percent?: number;
+  fixedValue?: number;
 }
 
 export interface CreateBillRequest {
