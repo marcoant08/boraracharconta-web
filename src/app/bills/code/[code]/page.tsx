@@ -19,6 +19,7 @@ import { ServiceFeeToggle } from '@/components/bills/ServiceFeeToggle';
 import { useAuthStore } from '@/store/auth.store';
 import { UpdateServiceFeeRequest } from '@/types/bill.types';
 import { getAxiosErrorMessage } from '@/utils/api-error';
+import { withEqualSplitFlags } from '@/utils/equal-split';
 
 const POLL_INTERVAL_MS = 10_000;
 
@@ -49,7 +50,7 @@ export default function BillCodePage() {
       return;
     }
     try {
-      const data = await billService.getBillByCode(code);
+      const data = withEqualSplitFlags(await billService.getBillByCode(code));
       if (isMountedRef.current) {
         billRef.current = data;
         setBill(data);

@@ -7,6 +7,7 @@ import {
   BillDetailDto,
   participantResolvedId,
 } from '@/types/bill.types';
+import { persistEqualSplitOverrides, withEqualSplitFlags } from '@/utils/equal-split';
 
 interface BillState {
   currentBill: BillResponseDto | null;
@@ -27,6 +28,7 @@ interface BillState {
   clearBill: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setItemSplitEqually: (itemId: string, splitEqually: boolean) => void;
 }
 
 export const useBillStore = create<BillState>((set) => ({
@@ -35,12 +37,13 @@ export const useBillStore = create<BillState>((set) => ({
   error: null,
   setBill: (bill: BillResponseDto) => {
     console.log('[bill]', bill);
+    const withFlags = withEqualSplitFlags(bill);
     set((state) => ({
       ...state,
       currentBill: {
-        ...bill,
+        ...withFlags,
         // Garantir que details sempre existe, mesmo se o backend não enviar
-        details: bill.details || [],
+        details: withFlags.details || [],
       },
       error: null,
       loading: false, // Garantir que loading seja false quando bill é atualizada
@@ -67,11 +70,16 @@ export const useBillStore = create<BillState>((set) => ({
       // Verificar se o item já existe para evitar duplicatas
       const itemExists = state.currentBill.items.some((i) => i.id === item.id);
       if (itemExists) return state;
+
+      const nextItem = {
+        ...item,
+        splitEqually: item.splitEqually ?? item.quantity > 1,
+      };
       
       return {
         currentBill: {
           ...state.currentBill,
-          items: [...state.currentBill.items, item],
+          items: [...state.currentBill.items, nextItem],
         },
       };
     });
@@ -80,11 +88,13 @@ export const useBillStore = create<BillState>((set) => ({
   removeItem: (itemId: string) => {
     set((state) => {
       if (!state.currentBill) return state;
+      const items = state.currentBill.items.filter((item) => item.id !== itemId);
+      persistEqualSplitOverrides(state.currentBill.id, items);
       
       return {
         currentBill: {
           ...state.currentBill,
-          items: state.currentBill.items.filter((item) => item.id !== itemId),
+          items,
           // Também remover consumos relacionados a este item
           consumptions: state.currentBill.consumptions.filter(
             (c) => c.itemId !== itemId
@@ -266,5 +276,21 @@ export const useBillStore = create<BillState>((set) => ({
 
   setError: (error: string | null) => {
     set({ error });
+  },
+
+  setItemSplitEqually: (itemId: string, splitEqually: boolean) => {
+    set((state) => {
+      if (!state.currentBill) return state;
+      const items = state.currentBill.items.map((item) =>
+        item.id === itemId ? { ...item, splitEqually } : item
+      );
+      persistEqualSplitOverrides(state.currentBill.id, items);
+      return {
+        currentBill: {
+          ...state.currentBill,
+          items,
+        },
+      };
+    });
   },
 }));

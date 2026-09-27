@@ -51,17 +51,18 @@ const buildAssignmentConsequence = (
   weights: ItemAssignmentWeight[],
   assigned: number,
   quantitiesDiffer: boolean,
-  matchesItemQuantity: boolean
+  matchesItemQuantity: boolean,
+  splitEqually = false
 ): string => {
   if (weights.length === 0) {
-    return itemQuantity === 1
+    return itemQuantity === 1 || splitEqually
       ? 'Marque quem dividiu este item.'
       : 'Diga quantas unidades cada um consumiu.';
   }
 
   const names = joinNames(weights.map((w) => w.participantName));
 
-  if (itemQuantity === 1) {
+  if (itemQuantity === 1 || splitEqually) {
     if (weights.length === 1) return `${weights[0].participantName} paga este item.`;
     return `Valor dividido entre ${names}.`;
   }
@@ -120,12 +121,15 @@ export const getItemAssignment = (
       weights,
       assigned,
       quantitiesDiffer,
-      matchesItemQuantity
+      matchesItemQuantity,
+      Boolean(item.splitEqually)
     ),
   };
 };
 
 export const itemUsesQuantityWeights = (bill: BillResponseDto, itemId: string): boolean => {
+  const item = bill.items.find((i) => i.id === itemId);
+  if (item?.splitEqually) return false;
   return getItemAssignment(bill, itemId)?.quantitiesDiffer ?? false;
 };
 
@@ -253,7 +257,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
   });
 
   const assignment = getItemAssignment(bill, itemId);
-  if (assignment?.quantitiesDiffer) {
+  if (assignment?.quantitiesDiffer && !item.splitEqually) {
     const totalWeight = assignment.assigned;
     steps.push({
       description: `\nRateio pela quantidade de cada pessoa:`,

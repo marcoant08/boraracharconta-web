@@ -15,6 +15,8 @@ export interface BillItemDto {
   value: number;
   quantity: number;
   category: string;
+  /** Cliente: divide o item igualmente entre quem marcar, como um item x1. */
+  splitEqually?: boolean;
 }
 
 export interface ConsumptionDto {

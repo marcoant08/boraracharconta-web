@@ -22,6 +22,7 @@ export const useBill = (billId?: string) => {
   const storeAddDetail = useBillStore((state) => state.addDetail);
   const storeUpdateDetail = useBillStore((state) => state.updateDetail);
   const storeRemoveDetail = useBillStore((state) => state.removeDetail);
+  const storeSetItemSplitEqually = useBillStore((state) => state.setItemSplitEqually);
   const billIdRef = useRef<string | undefined>(billId);
   const fetchingRef = useRef<string | null>(null);
 
@@ -283,6 +284,13 @@ export const useBill = (billId?: string) => {
     [router, setBill, setLoading, setError]
   );
 
+  const setItemSplitEqually = useCallback(
+    (itemId: string, splitEqually: boolean) => {
+      storeSetItemSplitEqually(itemId, splitEqually);
+    },
+    [storeSetItemSplitEqually]
+  );
+
   return {
     bill: currentBill,
     loading,
@@ -299,5 +307,6 @@ export const useBill = (billId?: string) => {
     updateDetail,
     removeDetail,
     updateServiceFee,
+    setItemSplitEqually,
   };
 };

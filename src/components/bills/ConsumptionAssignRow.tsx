@@ -36,7 +36,7 @@ export const ConsumptionAssignRow = memo(({ item, participant }: ConsumptionAssi
   const [loading, setLoading] = useState(false);
 
   const quantity = bill ? getParticipantItemQuantity(bill, participantId, item.id) : 0;
-  const isSharedItem = item.quantity === 1;
+  const useCheckbox = item.quantity === 1 || Boolean(item.splitEqually);
 
   const setQuantity = useCallback(
     async (next: number) => {
@@ -74,7 +74,7 @@ export const ConsumptionAssignRow = memo(({ item, participant }: ConsumptionAssi
     ]
   );
 
-  if (isSharedItem) {
+  if (useCheckbox) {
     return (
       <button
         type="button"

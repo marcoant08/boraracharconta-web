@@ -1,16 +1,18 @@
 'use client';
 
+import { useState } from 'react';
 import { useBill } from '@/hooks/useBill';
 import { useParams } from 'next/navigation';
-import { participantResolvedId } from '@/types/bill.types';
+import { BillItemDto, participantResolvedId } from '@/types/bill.types';
 import { formatCurrency } from '@/utils/format';
-import { getItemAssignment } from '@/utils/calculate';
+import { getConsumptionWeight, getItemAssignment, getItemConsumptions } from '@/utils/calculate';
 import { ConsumptionAssignRow } from './ConsumptionAssignRow';
 
 export const ConsumptionsTab = () => {
   const params = useParams();
   const billId = params.billId as string;
-  const { bill } = useBill(billId);
+  const { bill, setItemSplitEqually, updateConsumption } = useBill(billId);
+  const [togglingItemId, setTogglingItemId] = useState<string | null>(null);
 
   if (!bill) return null;
 
@@ -30,6 +32,32 @@ export const ConsumptionsTab = () => {
     );
   }
 
+  const handleSplitEquallyChange = async (item: BillItemDto, checked: boolean) => {
+    if (togglingItemId) return;
+    setTogglingItemId(item.id);
+    setItemSplitEqually(item.id, checked);
+    try {
+      if (checked) {
+        const toNormalize = getItemConsumptions(bill, item.id).filter(
+          (consumption) => getConsumptionWeight(consumption) !== 1
+        );
+        await Promise.all(
+          toNormalize.map((consumption) =>
+            updateConsumption({
+              participantId: consumption.participantId,
+              itemId: item.id,
+              quantity: 1,
+            })
+          )
+        );
+      }
+    } catch {
+      setItemSplitEqually(item.id, !checked);
+    } finally {
+      setTogglingItemId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <h1 className="text-xl py-5 text-center text-gray-900">
@@ -38,19 +66,40 @@ export const ConsumptionsTab = () => {
       {bill.items.map((item) => {
         const assignment = getItemAssignment(bill, item.id);
         const assigned = assignment?.assigned ?? 0;
+        const splitEqually = Boolean(item.splitEqually);
+        const showQuantityBar = item.quantity > 1 && !splitEqually;
         const isComplete = assignment?.matchesItemQuantity && assigned > 0;
         const isPartial = assigned > 0 && !assignment?.matchesItemQuantity;
 
         return (
           <section key={item.id} className="bg-white shadow-md rounded-lg overflow-hidden">
             <header className="px-4 pt-4 pb-2">
-              <div className="flex items-baseline justify-between gap-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
                 <h2 className="font-semibold text-gray-900 truncate">{item.name}</h2>
-                <span className="text-sm text-gray-500 shrink-0">
-                  x{item.quantity} · {formatCurrency(item.value)}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-sm text-gray-500">
+                    x{item.quantity} · {formatCurrency(item.value)}
+                  </span>
+                  {item.quantity > 1 && (
+                    <label
+                      className={`flex items-center gap-1.5 text-sm text-gray-600 ${
+                        togglingItemId === item.id ? 'opacity-60' : 'cursor-pointer'
+                      }`}
+                      title="Dividir o valor igualmente entre quem marcar"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={splitEqually}
+                        disabled={togglingItemId === item.id}
+                        onChange={(event) => handleSplitEquallyChange(item, event.target.checked)}
+                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      />
+                      <span>Dividir igual</span>
+                    </label>
+                  )}
+                </div>
               </div>
-              {item.quantity > 1 && (
+              {showQuantityBar && (
                 <p
                   className={`mt-2 text-sm font-medium ${
                     isComplete

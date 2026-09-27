@@ -1,7 +1,7 @@
 import { BillResponseDto, participantResolvedId } from '@/types/bill.types';
 import { Card } from '@/components/ui/Card';
 import { formatCurrency } from '@/utils/format';
-import { calculateBillTotals, getConsumptionWeight, getParticipantConsumptions } from '@/utils/calculate';
+import { calculateBillTotals, getConsumptionWeight, getItemAssignment, getParticipantConsumptions } from '@/utils/calculate';
 
 interface Props {
   bill: BillResponseDto;
@@ -10,6 +10,12 @@ interface Props {
 export const BillParticipantSummary = ({ bill }: Props) => {
   const { participantTotals, subtotal, serviceFee, grandTotal, feeConfig } = calculateBillTotals(bill);
   const feeApplied = feeConfig.enabled;
+
+  const itemsWithUnequalQuantities = new Set(
+    bill.items
+      .filter((item) => getItemAssignment(bill, item.id)?.quantitiesDiffer)
+      .map((item) => item.id)
+  );
 
   const getConsumedItems = (participantId: string) => {
     const consumptions = getParticipantConsumptions(bill, participantId);
@@ -48,7 +54,7 @@ export const BillParticipantSummary = ({ bill }: Props) => {
                         key={item.id}
                         className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded"
                       >
-                        {item.quantity > 1 || quantity > 1
+                        {itemsWithUnequalQuantities.has(item.id)
                           ? `${item.name} ×${quantity}`
                           : item.name}
                       </span>
