@@ -32,6 +32,7 @@ export const BillTabs = () => {
   const itemsComplete = (bill?.items.length ?? 0) > 0;
   const consumptionsComplete = bill ? isConsumptionStepComplete(bill) : false;
   const detailsComplete = true;
+  const hasDetail = (bill?.details.length ?? 0) > 0;
 
   const completeByTab: Record<(typeof tabDefs)[number]['id'], boolean> = {
     participants: participantsComplete,
@@ -41,9 +42,12 @@ export const BillTabs = () => {
     statistics: participantsComplete && itemsComplete && consumptionsComplete && detailsComplete,
   };
 
-  const tabs = tabDefs.map((tab) => ({
+  const activeIndex = tabDefs.findIndex((tab) => tab.id === activeTab);
+
+  const tabs = tabDefs.map((tab, index) => ({
     ...tab,
     complete: completeByTab[tab.id],
+    checked: tab.id === 'details' ? hasDetail || index < activeIndex : undefined,
   }));
 
   const changeTab = (tabId: string) => {

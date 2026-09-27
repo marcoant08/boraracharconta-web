@@ -5,6 +5,8 @@ interface Tab {
   label: string;
   icon?: ReactNode;
   complete?: boolean;
+  /** Quando definido, o check só aparece se este valor for verdadeiro. */
+  checked?: boolean;
 }
 
 interface TabsProps {
@@ -76,7 +78,8 @@ export const Tabs = ({ tabs, activeTab, onTabChange, children }: TabsProps) => {
             </div>
             {tabs.map((tab, index) => {
               const isActive = tab.id === activeTab;
-              const showCheck = Boolean(tab.complete) && !isActive;
+              const showCheck =
+                (tab.checked !== undefined ? tab.checked : Boolean(tab.complete)) && !isActive;
               const showMissed = !tab.complete && index < activeIndex;
               const circleClass = isActive
                 ? tab.complete
