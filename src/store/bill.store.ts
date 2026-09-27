@@ -36,7 +36,6 @@ export const useBillStore = create<BillState>((set) => ({
   loading: false,
   error: null,
   setBill: (bill: BillResponseDto) => {
-    console.log('[bill]', bill);
     const withFlags = withEqualSplitFlags(bill);
     set((state) => ({
       ...state,
