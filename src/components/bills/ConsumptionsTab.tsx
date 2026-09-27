@@ -5,13 +5,20 @@ import { useBill } from '@/hooks/useBill';
 import { useParams } from 'next/navigation';
 import { BillItemDto, participantResolvedId } from '@/types/bill.types';
 import { formatCurrency } from '@/utils/format';
-import { getConsumptionWeight, getItemAssignment, getItemConsumptions } from '@/utils/calculate';
+import { getConsumptionGaps, getConsumptionWeight, getItemAssignment, getItemConsumptions } from '@/utils/calculate';
 import { ConsumptionAssignRow } from './ConsumptionAssignRow';
 
 interface ConsumptionsTabProps {
   onGoToParticipants?: () => void;
   onGoToItems?: () => void;
+  showGaps?: boolean;
 }
+
+const joinNames = (names: string[]): string => {
+  if (names.length <= 1) return names[0] ?? '';
+  if (names.length === 2) return `${names[0]} e ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}`;
+};
 
 const tabLinkClass =
   'font-medium text-primary-600 hover:text-primary-700 underline underline-offset-2';
@@ -26,7 +33,11 @@ const TabLink = ({ label, onClick }: { label: string; onClick?: () => void }) =>
   );
 };
 
-export const ConsumptionsTab = ({ onGoToParticipants, onGoToItems }: ConsumptionsTabProps) => {
+export const ConsumptionsTab = ({
+  onGoToParticipants,
+  onGoToItems,
+  showGaps = false,
+}: ConsumptionsTabProps) => {
   const params = useParams();
   const billId = params.billId as string;
   const { bill, setItemSplitEqually, updateConsumption } = useBill(billId);
@@ -83,11 +94,23 @@ export const ConsumptionsTab = ({ onGoToParticipants, onGoToItems }: Consumption
     }
   };
 
+  const gaps = showGaps ? getConsumptionGaps(bill) : { people: [], items: [] };
+
   return (
     <div className="flex flex-col gap-3">
       <h1 className="text-xl py-5 text-center text-gray-900">
         Quanto cada um consumiu
       </h1>
+      {gaps.people.length > 0 && (
+        <p className="text-center text-base font-medium text-red-700 text-balance">
+          {joinNames(gaps.people)} ainda não {gaps.people.length === 1 ? 'consumiu' : 'consumiram'} nenhum item.
+        </p>
+      )}
+      {gaps.items.length > 0 && (
+        <p className="text-center text-base font-medium text-red-700 text-balance">
+          Ninguém consumiu {joinNames(gaps.items)}.
+        </p>
+      )}
       {bill.items.map((item) => {
         const assignment = getItemAssignment(bill, item.id);
         const assigned = assignment?.assigned ?? 0;

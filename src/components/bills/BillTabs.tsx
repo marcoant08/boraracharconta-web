@@ -25,6 +25,7 @@ const tabDefs = [
 
 export const BillTabs = () => {
   const [activeTab, setActiveTab] = useState<string>('participants');
+  const [revealConsumptionGaps, setRevealConsumptionGaps] = useState(false);
   const bill = useBillStore((state) => state.currentBill);
 
   const participantsComplete = (bill?.participants.length ?? 0) > 0;
@@ -45,18 +46,38 @@ export const BillTabs = () => {
     complete: completeByTab[tab.id],
   }));
 
+  const changeTab = (tabId: string) => {
+    if (
+      activeTab === 'consumptions' &&
+      tabId !== 'consumptions' &&
+      participantsComplete &&
+      itemsComplete &&
+      !consumptionsComplete
+    ) {
+      setRevealConsumptionGaps(true);
+    }
+    setActiveTab(tabId);
+  };
+
   return (
-    <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
+    <Tabs tabs={tabs} activeTab={activeTab} onTabChange={changeTab}>
       {activeTab === 'participants' && <ParticipantsTab />}
-      {activeTab === 'items' && <ItemsTab onGoToConsumptions={() => setActiveTab('consumptions')} />}
+      {activeTab === 'items' && <ItemsTab onGoToConsumptions={() => changeTab('consumptions')} />}
       {activeTab === 'consumptions' && (
         <ConsumptionsTab
-          onGoToParticipants={() => setActiveTab('participants')}
-          onGoToItems={() => setActiveTab('items')}
+          showGaps={revealConsumptionGaps}
+          onGoToParticipants={() => changeTab('participants')}
+          onGoToItems={() => changeTab('items')}
         />
       )}
       {activeTab === 'details' && <DetailsTab />}
-      {activeTab === 'statistics' && <StatisticsTab />}
+      {activeTab === 'statistics' && (
+        <StatisticsTab
+          onGoToParticipants={() => setActiveTab('participants')}
+          onGoToItems={() => setActiveTab('items')}
+          onGoToConsumptions={() => setActiveTab('consumptions')}
+        />
+      )}
     </Tabs>
   );
 };
