@@ -69,7 +69,7 @@ export const StatisticsTab = ({
     needsPeople ? { label: 'Participantes', onClick: onGoToParticipants } : null,
     needsItems ? { label: 'Itens', onClick: onGoToItems } : null,
     needsConsumptions ? { label: 'Consumos', onClick: onGoToConsumptions } : null,
-  ].filter((step): step is { label: string; onClick?: () => void } => step !== null);
+  ].filter((step): step is { label: string; onClick: (() => void) | undefined } => step !== null);
 
   if (missingSteps.length > 0) {
     const gaps = needsConsumptions ? getConsumptionGaps(bill) : { people: [], items: [] };
