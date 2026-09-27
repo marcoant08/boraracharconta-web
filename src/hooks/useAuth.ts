@@ -2,12 +2,7 @@ import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
-import {
-  LoginRequest,
-  RegisterRequest,
-  VerifyEmailRequest,
-  ResendVerificationCodeRequest,
-} from '@/types/auth.types';
+import { LoginRequest } from '@/types/auth.types';
 import { getAxiosErrorMessage } from '@/utils/api-error';
 import toast from 'react-hot-toast';
 
@@ -31,45 +26,6 @@ export const useAuth = () => {
     [setAuth, router]
   );
 
-  const register = useCallback(async (data: RegisterRequest) => {
-    try {
-      await authService.register(data);
-      toast.success('Conta criada! Verifique seu email para continuar.');
-      return true;
-    } catch (error: unknown) {
-      const message = getAxiosErrorMessage(error, 'Erro ao criar conta. Tente novamente.');
-      toast.error(message);
-      throw error;
-    }
-  }, []);
-
-  const verifyEmail = useCallback(async (data: VerifyEmailRequest) => {
-    try {
-      await authService.verifyEmail(data);
-      toast.success('Email verificado com sucesso!');
-      router.push('/login');
-      return true;
-    } catch (error: unknown) {
-      const message = getAxiosErrorMessage(error, 'Código inválido. Tente novamente.');
-      toast.error(message);
-      throw error;
-    }
-  }, [router]);
-
-  const resendVerificationCode = useCallback(
-    async (data: ResendVerificationCodeRequest) => {
-      try {
-        await authService.resendVerificationCode(data);
-        toast.success('Código reenviado! Verifique seu email.');
-      } catch (error: unknown) {
-        const message = getAxiosErrorMessage(error, 'Erro ao reenviar código. Tente novamente.');
-        toast.error(message);
-        throw error;
-      }
-    },
-    []
-  );
-
   const handleLogout = useCallback(() => {
     logout();
     toast.success('Logout realizado com sucesso!');
@@ -78,9 +34,6 @@ export const useAuth = () => {
 
   return {
     login,
-    register,
-    verifyEmail,
-    resendVerificationCode,
     logout: handleLogout,
     isAuthenticated,
     user,
