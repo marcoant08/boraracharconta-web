@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { billService } from '@/services/bill.service';
 import { BillSummaryDto } from '@/types/bill.types';
@@ -18,8 +17,8 @@ import { SyncIcon } from '@/components/icons/SyncIcon';
 import { TrashIcon } from '@/components/icons/TrashIcon';
 
 export default function HomePage() {
-  const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const authReady = useAuthStore((state) => state.authReady);
   const [bills, setBills] = useState<BillSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteMode, setDeleteMode] = useState(false);
@@ -76,16 +75,49 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
+    if (!authReady || !isAuthenticated) return;
     loadBills();
-  }, [isAuthenticated, router, loadBills]);
+  }, [authReady, isAuthenticated, loadBills]);
+
+  if (!authReady) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Carregando…</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <AppNavbar action="public" />
+        <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+          <div className="text-center mb-10">
+            <h1 className="font-display text-3xl sm:text-4xl text-gray-900 text-balance leading-tight">
+              Crie uma conta e comece a dividir despesas com seus amigos
+            </h1>
+          </div>
+          <Card className="text-center mb-8">
+            <p className="text-gray-600 mb-6">
+              Veja uma conta pública pelo código, sem precisar entrar
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/bills/code">
+                <Button variant="primary" size="lg" className="w-full sm:w-auto">
+                  Ver por Código
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                  Entrar
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        </main>
+        <AppFooter />
+      </div>
+    );
   }
 
   return (

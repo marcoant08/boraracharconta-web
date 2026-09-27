@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { useAuthStore } from '@/store/auth.store';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
@@ -27,11 +28,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      // Token inválido ou expirado - fazer logout
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      const onPublicBill = window.location.pathname.startsWith('/bills/code');
+      useAuthStore.getState().logout();
+      if (!onPublicBill) {
         window.location.href = '/login';
       }
     }
