@@ -217,11 +217,6 @@ export default function BillCodePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   <span className="font-semibold text-gray-900">{participant.name}</span>
-                  {bill.adminId === participant.userId && (
-                    <span className="px-2 py-0.5 text-xs font-semibold bg-primary-100 text-primary-800 rounded">
-                      Admin
-                    </span>
-                  )}
                 </div>
               ))}
             </div>
