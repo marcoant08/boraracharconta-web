@@ -8,7 +8,25 @@ import { formatCurrency } from '@/utils/format';
 import { getConsumptionWeight, getItemAssignment, getItemConsumptions } from '@/utils/calculate';
 import { ConsumptionAssignRow } from './ConsumptionAssignRow';
 
-export const ConsumptionsTab = () => {
+interface ConsumptionsTabProps {
+  onGoToParticipants?: () => void;
+  onGoToItems?: () => void;
+}
+
+const tabLinkClass =
+  'font-medium text-primary-600 hover:text-primary-700 underline underline-offset-2';
+
+const TabLink = ({ label, onClick }: { label: string; onClick?: () => void }) => {
+  if (!onClick) return <span className="font-medium text-primary-700">{label}</span>;
+
+  return (
+    <button type="button" onClick={onClick} className={tabLinkClass}>
+      {label}
+    </button>
+  );
+};
+
+export const ConsumptionsTab = ({ onGoToParticipants, onGoToItems }: ConsumptionsTabProps) => {
   const params = useParams();
   const billId = params.billId as string;
   const { bill, setItemSplitEqually, updateConsumption } = useBill(billId);
@@ -16,18 +34,25 @@ export const ConsumptionsTab = () => {
 
   if (!bill) return null;
 
-  if (!bill.participants.length) {
-    return (
-      <h1 className="text-xl py-5 text-center text-gray-900">
-        Informe as pessoas participantes
-      </h1>
-    );
-  }
+  const needsPeople = bill.participants.length === 0;
+  const needsItems = bill.items.length === 0;
 
-  if (!bill.items.length) {
+  if (needsPeople || needsItems) {
     return (
-      <h1 className="text-xl py-5 text-center text-gray-900">
-        Informe os itens consumidos
+      <h1 className="text-xl py-5 text-center text-gray-900 text-balance">
+        É preciso adicionar{' '}
+        {needsPeople && (
+          <>
+            pessoas em <TabLink label="Participantes" onClick={onGoToParticipants} />
+          </>
+        )}
+        {needsPeople && needsItems && ' e '}
+        {needsItems && (
+          <>
+            itens em <TabLink label="Itens" onClick={onGoToItems} />
+          </>
+        )}
+        .
       </h1>
     );
   }

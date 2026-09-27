@@ -133,6 +133,30 @@ export const itemUsesQuantityWeights = (bill: BillResponseDto, itemId: string): 
   return getItemAssignment(bill, itemId)?.quantitiesDiffer ?? false;
 };
 
+/** Cada item tem ao menos uma pessoa e cada pessoa consumiu ao menos um item. */
+export const isConsumptionStepComplete = (bill: BillResponseDto): boolean => {
+  if (bill.participants.length === 0 || bill.items.length === 0) return false;
+
+  const participantIds = new Set(bill.participants.map((participant) => participantResolvedId(participant)));
+  const itemIds = new Set(bill.items.map((item) => item.id));
+  const consumedItemIds = new Set<string>();
+  const participantIdsWithItem = new Set<string>();
+
+  for (const consumption of bill.consumptions || []) {
+    if (!participantIds.has(consumption.participantId) || !itemIds.has(consumption.itemId)) continue;
+    if (getConsumptionWeight(consumption) <= 0) continue;
+    consumedItemIds.add(consumption.itemId);
+    participantIdsWithItem.add(consumption.participantId);
+  }
+
+  const everyItemHasSomeone = bill.items.every((item) => consumedItemIds.has(item.id));
+  const everyPersonHasItem = bill.participants.every((participant) =>
+    participantIdsWithItem.has(participantResolvedId(participant))
+  );
+
+  return everyItemHasSomeone && everyPersonHasItem;
+};
+
 export const getParticipantItemQuantity = (
   bill: BillResponseDto,
   participantId: string,
