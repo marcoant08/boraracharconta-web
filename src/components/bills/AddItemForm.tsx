@@ -59,6 +59,16 @@ const PlusIcon = () => (
   </svg>
 );
 
+const FieldLabel = ({ htmlFor, children }: { htmlFor: string; children: string }) => (
+  <label
+    htmlFor={htmlFor}
+    className="absolute left-1/2 top-0 z-10 rounded-full border-[0.5px] border-gray-400 bg-gray-50 px-2 py-0.5 text-xs font-medium leading-none text-gray-700"
+    style={{ transform: 'translate(-50%, -50%)' }}
+  >
+    {children}
+  </label>
+);
+
 const roundButtonClass =
   'shrink-0 h-14 w-14 justify-center items-center rounded-full flex transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50 disabled:cursor-not-allowed disabled:opacity-40';
 
@@ -212,62 +222,67 @@ export const AddItemForm = () => {
         )}
 
         {step === 'price' && (
-          <input
-            ref={priceRef}
-            type="text"
-            name="item-price"
-            inputMode="decimal"
-            placeholder="R$ 0,00"
-            aria-label="Valor do item"
-            autoComplete="off"
-            value={price === 0 ? '' : formatCurrency(price)}
-            onChange={(event) => setPrice(parseMoney(event.target.value))}
-            onFocus={(event) => {
-              const field = event.target;
-              requestAnimationFrame(() => {
-                field.setSelectionRange(field.value.length, field.value.length);
-              });
-            }}
-            className="bg-white w-full h-14 rounded-full shadow-md px-5 outline-none text-lg font-medium tabular-nums text-gray-900 placeholder:text-gray-600 placeholder:font-normal focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50"
-          />
+          <div className="relative">
+            <FieldLabel htmlFor="bill-price">Valor</FieldLabel>
+            <input
+              ref={priceRef}
+              id="bill-price"
+              type="text"
+              name="item-price"
+              inputMode="decimal"
+              placeholder="R$ 0,00"
+              autoComplete="off"
+              value={price === 0 ? '' : formatCurrency(price)}
+              onChange={(event) => setPrice(parseMoney(event.target.value))}
+              onFocus={(event) => {
+                const field = event.target;
+                requestAnimationFrame(() => {
+                  field.setSelectionRange(field.value.length, field.value.length);
+                });
+              }}
+              className="bg-white w-full h-14 rounded-full shadow-md px-5 outline-none text-lg font-medium tabular-nums text-gray-900 placeholder:text-gray-600 placeholder:font-normal focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50"
+            />
+          </div>
         )}
 
         {step === 'quantity' && (
-          <div className="flex items-center bg-white w-full rounded-full shadow-md h-14 px-1.5 focus-within:ring-2 focus-within:ring-primary-600 focus-within:ring-offset-2 focus-within:ring-offset-gray-50">
-            <button
-              type="button"
-              onClick={() => changeQuantity(quantity - 1)}
-              disabled={submitting || quantity <= 1}
-              aria-label="Diminuir quantidade"
-              className="w-10 h-10 rounded-full flex items-center justify-center text-gray-900 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
-            >
-              <MinusIcon />
-            </button>
-            <input
-              id="bill-quantity"
-              ref={quantityRef}
-              type="text"
-              name="item-quantity"
-              inputMode="numeric"
-              aria-label="Quantidade"
-              autoComplete="off"
-              value={quantityText}
-              maxLength={5}
-              onChange={(event) => setQuantityText(event.target.value.replace(/\D/g, '').slice(0, 5))}
-              onBlur={() => {
-                if (parseQuantity(quantityText) < 1) setQuantityText('1');
-              }}
-              className="min-w-0 flex-1 bg-transparent text-center text-lg font-semibold tabular-nums text-gray-900 outline-none"
-            />
-            <button
-              type="button"
-              onClick={() => changeQuantity(quantity + 1)}
-              disabled={submitting || quantity >= 99999}
-              aria-label="Aumentar quantidade"
-              className="w-10 h-10 rounded-full flex items-center justify-center text-gray-900 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
-            >
-              <PlusIcon />
-            </button>
+          <div className="relative">
+            <FieldLabel htmlFor="bill-quantity">Quantidade</FieldLabel>
+            <div className="flex items-center bg-white w-full rounded-full shadow-md h-14 px-1.5 focus-within:ring-2 focus-within:ring-primary-600 focus-within:ring-offset-2 focus-within:ring-offset-gray-50">
+              <button
+                type="button"
+                onClick={() => changeQuantity(quantity - 1)}
+                disabled={submitting || quantity <= 1}
+                aria-label="Diminuir quantidade"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-900 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+              >
+                <MinusIcon />
+              </button>
+              <input
+                id="bill-quantity"
+                ref={quantityRef}
+                type="text"
+                name="item-quantity"
+                inputMode="numeric"
+                autoComplete="off"
+                value={quantityText}
+                maxLength={5}
+                onChange={(event) => setQuantityText(event.target.value.replace(/\D/g, '').slice(0, 5))}
+                onBlur={() => {
+                  if (parseQuantity(quantityText) < 1) setQuantityText('1');
+                }}
+                className="min-w-0 flex-1 bg-transparent text-center text-lg font-semibold tabular-nums text-gray-900 outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => changeQuantity(quantity + 1)}
+                disabled={submitting || quantity >= 99999}
+                aria-label="Aumentar quantidade"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-900 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+              >
+                <PlusIcon />
+              </button>
+            </div>
           </div>
         )}
       </div>
