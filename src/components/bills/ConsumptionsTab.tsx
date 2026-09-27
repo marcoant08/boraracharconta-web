@@ -113,6 +113,7 @@ export const ConsumptionsTab = ({
           {gaps.items.length > 0 && <p>Ninguém consumiu {joinNames(gaps.items)}.</p>}
         </div>
       )}
+      <div className="flex flex-col gap-6">
       {bill.items.map((item) => {
         const assignment = getItemAssignment(bill, item.id);
         const assigned = assignment?.assigned ?? 0;
@@ -122,17 +123,17 @@ export const ConsumptionsTab = ({
         const isPartial = assigned > 0 && !assignment?.matchesItemQuantity;
 
         return (
-          <section key={item.id} className="bg-white shadow-md rounded-lg overflow-hidden">
-            <header className="px-4 pt-4 pb-2">
+          <section key={item.id} className="shadow-md rounded-3xl overflow-hidden">
+            <header className="bg-primary-100 px-5 pt-5 pb-3">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <h2 className="font-semibold text-gray-900 truncate">{item.name}</h2>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-gray-700">
                     x{item.quantity} · {formatCurrency(item.value)}
                   </span>
                   {item.quantity > 1 && (
                     <label
-                      className={`flex items-center gap-1.5 text-sm text-gray-600 ${
+                      className={`flex items-center gap-1.5 text-sm text-gray-800 ${
                         togglingItemId === item.id ? 'opacity-60' : 'cursor-pointer'
                       }`}
                       title="Dividir o valor igualmente entre quem marcar"
@@ -162,11 +163,11 @@ export const ConsumptionsTab = ({
                   {assigned} de {item.quantity} atribuídos
                 </p>
               )}
-              <p className="mt-1 text-sm text-gray-600">
+              <p className="mt-1 text-sm text-gray-800">
                 {assignment?.consequence}
               </p>
             </header>
-            <div className="divide-y divide-gray-100">
+            <div className="bg-white divide-y divide-gray-100">
               {bill.participants.map((participant) => (
                 <ConsumptionAssignRow
                   key={participantResolvedId(participant)}
@@ -178,6 +179,7 @@ export const ConsumptionsTab = ({
           </section>
         );
       })}
+      </div>
     </div>
   );
 };
