@@ -9,9 +9,10 @@ import { HouseIcon } from '../icons/HouseIcon';
 
 interface AppNavbarProps {
   action?: 'logout' | 'back' | 'public';
+  sticky?: boolean;
 }
 
-export const AppNavbar = ({ action = 'back' }: AppNavbarProps) => {
+export const AppNavbar = ({ action = 'back', sticky = true }: AppNavbarProps) => {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -44,9 +45,11 @@ export const AppNavbar = ({ action = 'back' }: AppNavbarProps) => {
   };
 
   return (
-    <header className="bg-white shadow sticky top-0 z-40">
+    <header className={`bg-white border-b border-gray-200 ${sticky ? 'sticky top-0 z-40' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-gray-900">bora rachar conta</h1>
+        <h1 className="font-display text-xl font-semibold tracking-tight text-gray-900">
+          bora rachar conta
+        </h1>
         <div className="flex items-center gap-3">
           {user && <span className="text-gray-700 text-sm">Olá, {user.name}</span>}
           {renderAction()}

@@ -33,7 +33,7 @@ export const ParticipantsTab = () => {
 
       {bill.participants.length === 0 ? (
         <h1 className="text-xl py-5 text-center text-gray-900">
-          👤 Adicione as pessoas
+          Adicione as pessoas
         </h1>
       ) : (
         <h1 className="text-xl py-5 text-center text-gray-900">
@@ -57,7 +57,7 @@ export const ParticipantsTab = () => {
                       {participant.name}
                     </h1>
                     {bill.adminId === participant.userId && (
-                      <span className="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded">
+                      <span className="px-2 py-1 text-xs font-semibold bg-primary-100 text-primary-800 rounded">
                         Admin
                       </span>
                     )}

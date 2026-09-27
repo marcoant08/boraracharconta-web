@@ -78,8 +78,8 @@ export const ServiceFeeModal = ({ open, loading, onClose, onConfirm }: Props) =>
             onClick={() => setType('percent')}
             className={`px-3 py-2 rounded-lg text-sm font-medium border ${
               type === 'percent'
-                ? 'border-primary-600 bg-primary-50 text-primary-700'
-                : 'border-gray-200 text-gray-700'
+                ? 'border-transparent bg-primary-100 text-primary-800'
+                : 'border-gray-200 bg-white text-gray-700'
             }`}
           >
             Porcentagem
@@ -89,8 +89,8 @@ export const ServiceFeeModal = ({ open, loading, onClose, onConfirm }: Props) =>
             onClick={() => setType('fixed')}
             className={`px-3 py-2 rounded-lg text-sm font-medium border ${
               type === 'fixed'
-                ? 'border-primary-600 bg-primary-50 text-primary-700'
-                : 'border-gray-200 text-gray-700'
+                ? 'border-transparent bg-primary-100 text-primary-800'
+                : 'border-gray-200 bg-white text-gray-700'
             }`}
           >
             Valor fixo

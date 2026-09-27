@@ -22,7 +22,9 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <AppLogo />
-          <h1 className="text-3xl font-bold text-gray-900">bora rachar conta</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-gray-900">
+            bora rachar conta
+          </h1>
           <p className="mt-2 text-gray-600">Entre na sua conta</p>
         </div>
         <Card>

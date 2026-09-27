@@ -3,19 +3,40 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --paper: oklch(0.975 0.01 95);
+  --ink: oklch(0.24 0.028 168);
+  --pine: oklch(0.36 0.09 162);
+  color-scheme: light;
+}
+
+html {
+  background: var(--paper);
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  color: var(--ink);
+  background: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: oklch(0.88 0.045 155);
+  color: oklch(0.22 0.03 165);
+}
+
+input,
+textarea {
+  caret-color: var(--pine);
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--pine);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.78 0.02 95) transparent;
 }
 
 @layer utilities {

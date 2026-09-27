@@ -86,14 +86,15 @@ export default function BillPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <AppNavbar action="back" />
-      <header className="bg-white shadow sticky top-0 z-40">
+      <div className="sticky top-0 z-40">
+        <AppNavbar action="back" sticky={false} />
+        <header className="bg-white border-b border-gray-200">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{bill.name}</h1>
               <p className="text-gray-600 mt-1">
-                Código: <span className="font-mono font-semibold">{formatCode(bill.code)}</span>
+                Código: <span className="font-mono font-semibold tracking-wide">{formatCode(bill.code)}</span>
               </p>
               <ServiceFeeToggle bill={bill} canConfigure onUpdate={updateServiceFee} />
             </div>
@@ -103,8 +104,9 @@ export default function BillPage() {
               </Button>
             </div>
           </div>
-        </div>
-      </header>
+          </div>
+        </header>
+      </div>
 
       <main className="flex-1 max-w-3xl mx-auto sm:px-6 lg:px-8 py-8 w-full">
         <BillTabs />

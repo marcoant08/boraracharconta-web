@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Fraunces, Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import { Providers } from './providers';
 
 const inter = Inter({ subsets: ['latin'] });
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-display',
+});
 
 export const metadata: Metadata = {
   title: 'Divisão de Contas',
@@ -26,10 +30,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>
+      <body className={`${inter.className} ${fraunces.variable}`}>
         <Providers>
           {children}
-          <Toaster position="top-right" />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: 'oklch(0.995 0.004 95)',
+                color: 'oklch(0.24 0.028 168)',
+                border: '1px solid oklch(0.905 0.016 90)',
+                boxShadow: '0 10px 24px -12px oklch(0.28 0.03 165 / 0.22)',
+                borderRadius: '0.75rem',
+                fontSize: '0.875rem',
+              },
+            }}
+          />
         </Providers>
       </body>
     </html>

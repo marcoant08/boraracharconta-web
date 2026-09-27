@@ -93,14 +93,10 @@ export default function HomePage() {
       <AppNavbar action="logout" />
 
       <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-        <div className="text-center mb-12">
-          <h1 className="text-6xl text-gray-600">
-            📝
-          </h1>
-          <br />
-          <p className="text-xl text-gray-600">
+        <div className="text-center mb-10">
+          <h1 className="font-display text-3xl sm:text-4xl text-gray-900 text-balance leading-tight">
             Crie uma conta e comece a dividir despesas com seus amigos
-          </p>
+          </h1>
         </div>
 
         <Card className="text-center mb-8">
@@ -143,13 +139,26 @@ export default function HomePage() {
 
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              <svg
+                className="animate-spin h-8 w-8 text-primary-700 mx-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
               <p className="mt-2 text-gray-600">Carregando contas...</p>
             </div>
           ) : bills.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500 mb-4">Você ainda não participa de nenhuma conta.</p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-600">
                 Crie uma nova conta ou entre com um código para começar.
               </p>
             </div>
@@ -163,12 +172,12 @@ export default function HomePage() {
                         <h4 className="font-semibold text-gray-900 mb-1">{bill.name}</h4>
                         <p className="text-sm text-gray-600 flex items-center gap-2">
                           Código:{' '}
-                          <span className="font-mono font-semibold">{formatCode(bill.code)}</span>
+                          <span className="font-mono font-semibold tracking-wide">{formatCode(bill.code)}</span>
                           <span
                             className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                               bill.isPublic
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-100 text-gray-600'
+                                ? 'bg-primary-100 text-primary-800'
+                                : 'bg-gray-100 text-gray-700'
                             }`}
                           >
                             {bill.isPublic ? 'Pública' : 'Privada'}
@@ -207,8 +216,8 @@ export default function HomePage() {
                       onClick={() => toggleSelection(bill.id)}
                       className={`p-4 border rounded-lg cursor-pointer transition-all ${
                         selectedIds.includes(bill.id)
-                          ? 'border-red-400 bg-red-50'
-                          : 'border-gray-200 hover:border-gray-400'
+                          ? 'border-gray-200 bg-red-50'
+                          : 'border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       {billItem}
@@ -217,7 +226,7 @@ export default function HomePage() {
                     <Link
                       key={bill.id}
                       href={`/bills/${bill.id}`}
-                      className="block p-4 border border-gray-200 rounded-lg hover:border-primary-500 hover:shadow-md transition-all"
+                      className="block p-4 border border-gray-200 rounded-lg hover:bg-primary-50 hover:shadow-card transition-all"
                     >
                       {billItem}
                     </Link>
@@ -236,7 +245,7 @@ export default function HomePage() {
                     Cancelar
                   </Button>
                   <Button
-                    variant="primary"
+                    variant="danger"
                     className="flex-1"
                     onClick={confirmDelete}
                     disabled={selectedIds.length === 0 || deleting}

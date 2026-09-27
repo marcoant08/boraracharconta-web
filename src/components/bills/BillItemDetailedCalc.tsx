@@ -26,7 +26,7 @@ export const BillItemDetailedCalc = ({ bill }: Props) => {
               </div>
 
               <div className="bg-gray-50 rounded-lg p-3 lg:p-4 mb-4">
-                <h5 className="font-semibold text-gray-900 mb-3">📊 Passo a passo do cálculo:</h5>
+                <h5 className="font-semibold text-gray-900 mb-3">Passo a passo do cálculo</h5>
                 <div className="space-y-1 text-sm text-gray-700 font-mono">
                   {division.steps.map((step, index) => {
                     const isSectionHeader = step.description.startsWith('\n');
@@ -50,7 +50,7 @@ export const BillItemDetailedCalc = ({ bill }: Props) => {
               </div>
 
               <div className="mt-4">
-                <h5 className="font-semibold text-gray-900 mb-2">💰 Total por participante:</h5>
+                <h5 className="font-semibold text-gray-900 mb-2">Total por participante</h5>
                 <div className="space-y-2">
                   {division.participantTotals.map((pt) => (
                     <div

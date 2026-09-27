@@ -83,7 +83,7 @@ export const AddItemForm = () => {
           onKeyUp={(e) => {
             if (['Enter', 'NumpadEnter'].includes(e.code)) onAddItem();
           }}
-          className="text-5xl text-center border-b-2 border-gray-400 bg-transparent outline-none py-2 max-w-80 text-gray-900"
+          className="text-5xl text-center border-b-2 border-primary-700 bg-transparent outline-none py-2 max-w-80 text-gray-900 tabular-nums"
           style={{ width: `${formatMoney(item.price).length * 16 + 90}px` }}
           placeholder="R$ 0,00"
           onFocus={(e) => {

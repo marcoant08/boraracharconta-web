@@ -291,7 +291,7 @@ export const DetailsTab = () => {
 
       {details.length === 0 ? (
         <h1 className="text-xl py-5 text-center text-gray-900">
-          📝 Adicione eventos na linha do tempo
+          Adicione eventos na linha do tempo
         </h1>
       ) : (
         <>

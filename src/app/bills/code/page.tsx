@@ -50,7 +50,9 @@ function BillCodeContent() {
         <div className="max-w-md w-full">
           <div className="text-center mb-6">
             <AppLogo />
-            <h1 className="text-2xl font-bold text-gray-900">Ver Conta</h1>
+            <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900">
+              Ver Conta
+            </h1>
           </div>
           <Card>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -59,6 +61,7 @@ function BillCodeContent() {
                 type="text"
                 placeholder="ABC1234"
                 maxLength={7}
+                className="font-mono tracking-[0.2em] uppercase text-center"
                 {...register('code', {
                   onChange: (e) => {
                     setValue('code', e.target.value.toUpperCase());

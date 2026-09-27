@@ -161,8 +161,7 @@ export default function BillCodePage() {
         <Card>
           <>
             <div className="text-center py-4">
-              <p className="text-2xl mb-2">🔍</p>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Conta não encontrada</h2>
+              <h2 className="font-display text-xl font-semibold text-gray-900 mb-2">Conta não encontrada</h2>
               <p className="text-gray-600 mb-6">Verifique o código e tente novamente.</p>
               <Link href="/">
                 <Button variant="primary">Voltar para Home</Button>
@@ -176,14 +175,15 @@ export default function BillCodePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <AppNavbar action="public" />
-      <header className="bg-white shadow sticky top-0 z-40">
+      <div className="sticky top-0 z-40">
+        <AppNavbar action="public" sticky={false} />
+        <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{bill.name}</h1>
               <p className="text-gray-600 mt-1">
-                Código: <span className="font-mono font-semibold">{formatCode(bill.code)}</span>
+                Código: <span className="font-mono font-semibold tracking-wide">{formatCode(bill.code)}</span>
               </p>
               <ServiceFeeToggle
                 bill={bill}
@@ -197,8 +197,9 @@ export default function BillCodePage() {
               </Button>
             </div>
           </div>
-        </div>
-      </header>
+          </div>
+        </header>
+      </div>
 
       <main className="flex-1 max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8 w-full space-y-6">
         {/* Participantes */}
@@ -217,7 +218,7 @@ export default function BillCodePage() {
                   </svg>
                   <span className="font-semibold text-gray-900">{participant.name}</span>
                   {bill.adminId === participant.userId && (
-                    <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded">
+                    <span className="px-2 py-0.5 text-xs font-semibold bg-primary-100 text-primary-800 rounded">
                       Admin
                     </span>
                   )}
