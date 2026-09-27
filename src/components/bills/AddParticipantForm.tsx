@@ -41,7 +41,7 @@ export const AddParticipantForm = ({ billId, onSuccess }: AddParticipantFormProp
     <div className="flex gap-5 w-full justify-between pt-5">
       <input
         type="text"
-        placeholder="Digite o nome..."
+        placeholder="Digite o nome da pessoa..."
         value={name}
         onChange={(e) => setName(e.target.value)}
         onKeyUp={(e) => {
