@@ -12,13 +12,12 @@ import { formatCode } from '@/utils/format';
 import toast from 'react-hot-toast';
 import { AppNavbar } from '@/components/ui/AppNavbar';
 import { CopyIcon } from '@/components/icons/CopyIcon';
-import { ServiceFeeToggle } from '@/components/bills/ServiceFeeToggle';
 
 export default function BillPage() {
   const params = useParams();
   const router = useRouter();
   const billId = params.billId as string;
-  const { bill, loading, error, updateServiceFee } = useBill(billId);
+  const { bill, loading, error } = useBill(billId);
   const clearBill = useBillStore((state) => state.clearBill);
 
   useEffect(() => {
@@ -96,7 +95,6 @@ export default function BillPage() {
               <p className="text-gray-600 mt-1">
                 Código: <span className="font-mono font-semibold tracking-wide">{formatCode(bill.code)}</span>
               </p>
-              <ServiceFeeToggle bill={bill} canConfigure onUpdate={updateServiceFee} />
             </div>
             <div className="flex gap-4">
               <Button variant="secondary" onClick={copyInviteLink}>

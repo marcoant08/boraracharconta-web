@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { billService } from '@/services/bill.service';
 import { BillResponseDto, participantResolvedId } from '@/types/bill.types';
@@ -15,13 +15,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { AppNavbar } from '@/components/ui/AppNavbar';
 import { CopyIcon } from '@/components/icons/CopyIcon';
-import { ServiceFeeToggle } from '@/components/bills/ServiceFeeToggle';
-import { useAuthStore } from '@/store/auth.store';
-import { UpdateServiceFeeRequest } from '@/types/bill.types';
-import { getAxiosErrorMessage } from '@/utils/api-error';
 import { withEqualSplitFlags } from '@/utils/equal-split';
-
-const POLL_INTERVAL_MS = 10_000;
 
 type PageError = 'private' | 'not_found' | null;
 
@@ -32,64 +26,34 @@ export default function BillCodePage() {
   const [bill, setBill] = useState<BillResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState<PageError>(null);
-  const user = useAuthStore((state) => state.user);
-
-  const billRef = useRef<BillResponseDto | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isMountedRef = useRef(true);
-
-  const stopPolling = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  };
-
-  const fetchBill = async (isInitial = false) => {
-    if (typeof document !== 'undefined' && document.visibilityState !== 'visible' && !isInitial) {
-      return;
-    }
-    try {
-      const data = withEqualSplitFlags(await billService.getBillByCode(code));
-      if (isMountedRef.current) {
-        billRef.current = data;
-        setBill(data);
-        if (isInitial) setLoading(false);
-      }
-    } catch (err: unknown) {
-      if (!isMountedRef.current) return;
-      const status = (err as { response?: { status?: number } })?.response?.status;
-      if (status === 403) {
-        setPageError('private');
-        stopPolling();
-      } else if (status === 404) {
-        setPageError('not_found');
-        stopPolling();
-      }
-      if (isInitial) setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    isMountedRef.current = true;
+    let cancelled = false;
 
-    fetchBill(true);
-
-    intervalRef.current = setInterval(() => fetchBill(false), POLL_INTERVAL_MS);
-
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        void fetchBill(false);
+    const fetchBill = async () => {
+      try {
+        const data = withEqualSplitFlags(await billService.getBillByCode(code));
+        if (!cancelled) {
+          setBill(data);
+          setLoading(false);
+        }
+      } catch (err: unknown) {
+        if (cancelled) return;
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status === 403) {
+          setPageError('private');
+        } else if (status === 404) {
+          setPageError('not_found');
+        }
+        setLoading(false);
       }
     };
-    document.addEventListener('visibilitychange', onVisibility);
+
+    fetchBill();
 
     return () => {
-      isMountedRef.current = false;
-      stopPolling();
-      document.removeEventListener('visibilitychange', onVisibility);
+      cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
   if (loading) {
@@ -142,19 +106,6 @@ export default function BillCodePage() {
     toast.success('Link copiado para a área de transferência!');
   };
 
-  const updateServiceFee = async (data: UpdateServiceFeeRequest) => {
-    if (!bill) return;
-    try {
-      const updated = await billService.updateServiceFee(bill.id, data);
-      billRef.current = updated;
-      setBill(updated);
-      toast.success(data.enabled ? 'Taxa de serviço aplicada!' : 'Taxa de serviço removida.');
-    } catch (error: unknown) {
-      toast.error(getAxiosErrorMessage(error, 'Erro ao atualizar taxa de serviço.'));
-      throw error;
-    }
-  };
-
   if (pageError === 'not_found' || !bill) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -185,11 +136,6 @@ export default function BillCodePage() {
               <p className="text-gray-600 mt-1">
                 Código: <span className="font-mono font-semibold tracking-wide">{formatCode(bill.code)}</span>
               </p>
-              <ServiceFeeToggle
-                bill={bill}
-                canConfigure={user?.id === bill.adminId}
-                onUpdate={updateServiceFee}
-              />
             </div>
             <div className="flex gap-4">
               <Button variant="secondary" onClick={copyInviteLink}>

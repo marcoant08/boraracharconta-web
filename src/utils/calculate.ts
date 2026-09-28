@@ -127,12 +127,6 @@ export const getItemAssignment = (
   };
 };
 
-export const itemUsesQuantityWeights = (bill: BillResponseDto, itemId: string): boolean => {
-  const item = bill.items.find((i) => i.id === itemId);
-  if (item?.splitEqually) return false;
-  return getItemAssignment(bill, itemId)?.quantitiesDiffer ?? false;
-};
-
 export const getConsumptionGaps = (bill: BillResponseDto): { people: string[]; items: string[] } => {
   if (bill.participants.length === 0 || bill.items.length === 0) {
     return { people: [], items: [] };
@@ -207,7 +201,12 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
   const valuePerUnit = item.value;
   const totalValue = valuePerUnit * item.quantity;
   const totalQuantityConsumed = item.quantity; // Total consumido é a quantity do item
-  const details = (bill.details || []).filter((d) => d.itemId === itemId);
+  // Rateio por chegada atrasada ou saída antes do fim está desligado.
+  // Eventos da linha do tempo continuam no modelo, mas não alteram a divisão.
+  const presenceTimelineSplitEnabled = false as boolean;
+  const details = (presenceTimelineSplitEnabled ? bill.details || [] : []).filter(
+    (d) => d.itemId === itemId
+  );
   
   // Obter participantes que realmente consumiram este item
   const itemConsumptions = getItemConsumptions(bill, itemId);
