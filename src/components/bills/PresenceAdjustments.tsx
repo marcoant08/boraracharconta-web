@@ -1,14 +1,10 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { FormEvent, useRef, useState } from 'react';
+import { Button } from '@/components/ui/Button';
 import { useBill } from '@/hooks/useBill';
 import { useBillStore } from '@/store/bill.store';
-import {
-  BillItemDto,
-  BillResponseDto,
-  ParticipantDto,
-  participantResolvedId,
-} from '@/types/bill.types';
+import { BillItemDto, BillResponseDto, participantResolvedId } from '@/types/bill.types';
 import { getItemAssignment } from '@/utils/calculate';
 
 interface PresenceAdjustmentsProps {
@@ -16,9 +12,21 @@ interface PresenceAdjustmentsProps {
   onGoToConsumptions?: () => void;
 }
 
+type PresenceKind = 'late' | 'left';
+
 interface PresenceValue {
   arrivedAfter: number | null;
   leftAfter: number | null;
+}
+
+interface PresenceCard {
+  key: string;
+  userId: string;
+  itemId: string;
+  personName: string;
+  itemName: string;
+  kind: PresenceKind;
+  absent: number;
 }
 
 const readPresence = (
@@ -54,189 +62,106 @@ const sharedEqualItems = (bill: BillResponseDto): BillItemDto[] =>
     return !(assignment.quantitiesDiffer && !item.splitEqually);
   });
 
-const Stepper = ({
-  label,
-  value,
-  min,
-  max,
-  total,
-  onStep,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  total: number;
-  onStep: (delta: number) => void;
-}) => (
-  <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-700">
-    <span className="min-w-0">{label}</span>
-    <div className="flex items-center gap-1 shrink-0">
-      <button
-        type="button"
-        onClick={() => onStep(-1)}
-        disabled={value <= min}
-        aria-label="Diminuir"
-        className="w-8 h-8 rounded-full border border-gray-300 text-gray-700 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        −
-      </button>
-      <span className="w-6 text-center font-semibold tabular-nums text-gray-900">{value}</span>
-      <button
-        type="button"
-        onClick={() => onStep(1)}
-        disabled={value >= max}
-        aria-label="Aumentar"
-        className="w-8 h-8 rounded-full border border-gray-300 text-gray-700 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        +
-      </button>
-    </div>
-    <span className="shrink-0">de {total}</span>
-  </div>
-);
+const personConsumesItem = (bill: BillResponseDto, itemId: string, userId: string) =>
+  getItemAssignment(bill, itemId)?.weights.some((weight) => weight.participantId === userId) ?? false;
 
-const PresencePerson = ({
-  bill,
-  item,
-  participant,
-  onSave,
-}: {
-  bill: BillResponseDto;
-  item: BillItemDto;
-  participant: ParticipantDto;
-  onSave: (userId: string, itemId: string, next: PresenceValue) => Promise<void>;
-}) => {
-  const userId = participantResolvedId(participant);
-  const server = readPresence(bill, item.id, userId, item.quantity);
-  const [presence, setPresence] = useState(server);
-  const presenceRef = useRef(server);
+const eligibleItems = (bill: BillResponseDto, userId: string) =>
+  sharedEqualItems(bill).filter((item) => personConsumesItem(bill, item.id, userId));
 
-  const apply = (patch: (current: PresenceValue) => PresenceValue) => {
-    const next = patch(presenceRef.current);
-    presenceRef.current = next;
-    setPresence(next);
-    void onSave(userId, item.id, next).catch(() => {
-      const current = useBillStore.getState().currentBill;
-      if (!current) return;
-      const reverted = readPresence(current, item.id, userId, item.quantity);
-      presenceRef.current = reverted;
-      setPresence(reverted);
-    });
-  };
-
-  const arrivalMax = presence.leftAfter != null ? presence.leftAfter - 1 : item.quantity - 1;
-  const leaveMin = presence.arrivedAfter != null ? presence.arrivedAfter + 1 : 1;
-  const leaveMax = item.quantity - 1;
-  const canArrive = leaveMax >= 1 && (presence.leftAfter == null || presence.leftAfter > 1);
-  const canLeave = leaveMax >= leaveMin;
-
-  return (
-    <div className="px-4 py-3">
-      <p className="font-medium text-gray-900">{participant.name}</p>
-      {presence.arrivedAfter == null && presence.leftAfter == null && (
-        <p className="mt-1 text-sm text-gray-500">Esteve do início ao fim</p>
-      )}
-
-      <label className={`mt-2 flex items-center gap-2 text-sm text-gray-800 ${canArrive || presence.arrivedAfter != null ? 'cursor-pointer' : 'opacity-40'}`}>
-        <input
-          type="checkbox"
-          checked={presence.arrivedAfter != null}
-          disabled={!canArrive && presence.arrivedAfter == null}
-          onChange={(event) => {
-            const checked = event.target.checked;
-            apply((current) => ({
-              ...current,
-              arrivedAfter: checked ? 1 : null,
-            }));
-          }}
-          className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-        />
-        Chegou depois
-      </label>
-      {presence.arrivedAfter != null && (
-        <Stepper
-          label="já tinham sido consumidas"
-          value={presence.arrivedAfter}
-          min={1}
-          max={Math.max(1, arrivalMax)}
-          total={item.quantity}
-          onStep={(delta) =>
-            apply((current) => {
-              const max = current.leftAfter != null ? current.leftAfter - 1 : item.quantity - 1;
-              const value = current.arrivedAfter ?? 1;
-              return { ...current, arrivedAfter: Math.min(max, Math.max(1, value + delta)) };
-            })
-          }
-        />
-      )}
-
-      <label className={`mt-2 flex items-center gap-2 text-sm text-gray-800 ${canLeave || presence.leftAfter != null ? 'cursor-pointer' : 'opacity-40'}`}>
-        <input
-          type="checkbox"
-          checked={presence.leftAfter != null}
-          disabled={!canLeave && presence.leftAfter == null}
-          onChange={(event) => {
-            const checked = event.target.checked;
-            apply((current) => ({
-              ...current,
-              leftAfter: checked
-                ? Math.max(
-                    current.arrivedAfter != null ? current.arrivedAfter + 1 : 1,
-                    item.quantity - 1
-                  )
-                : null,
-            }));
-          }}
-          className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-        />
-        Saiu antes
-      </label>
-      {presence.leftAfter != null && (
-        <Stepper
-          label="quando saiu, já tinham sido consumidas"
-          value={presence.leftAfter}
-          min={leaveMin}
-          max={leaveMax}
-          total={item.quantity}
-          onStep={(delta) =>
-            apply((current) => {
-              const min = current.arrivedAfter != null ? current.arrivedAfter + 1 : 1;
-              const max = item.quantity - 1;
-              const value = current.leftAfter ?? max;
-              return { ...current, leftAfter: Math.min(max, Math.max(min, value + delta)) };
-            })
-          }
-        />
-      )}
-    </div>
-  );
+const maxAbsent = (bill: BillResponseDto, item: BillItemDto, userId: string, kind: PresenceKind) => {
+  const presence = readPresence(bill, item.id, userId, item.quantity);
+  if (kind === 'late') {
+    return presence.leftAfter != null ? presence.leftAfter - 1 : item.quantity - 1;
+  }
+  const earliestLeave = presence.arrivedAfter != null ? presence.arrivedAfter + 1 : 1;
+  return item.quantity - earliestLeave;
 };
+
+const presenceCards = (bill: BillResponseDto): PresenceCard[] => {
+  const cards: PresenceCard[] = [];
+
+  for (const item of bill.items) {
+    for (const participant of bill.participants) {
+      const userId = participantResolvedId(participant);
+      const presence = readPresence(bill, item.id, userId, item.quantity);
+      if (presence.arrivedAfter != null) {
+        cards.push({
+          key: `${item.id}:${userId}:late`,
+          userId,
+          itemId: item.id,
+          personName: participant.name,
+          itemName: item.name,
+          kind: 'late',
+          absent: presence.arrivedAfter,
+        });
+      }
+      if (presence.leftAfter != null) {
+        cards.push({
+          key: `${item.id}:${userId}:left`,
+          userId,
+          itemId: item.id,
+          personName: participant.name,
+          itemName: item.name,
+          kind: 'left',
+          absent: item.quantity - presence.leftAfter,
+        });
+      }
+    }
+  }
+
+  return cards;
+};
+
+const selectClass =
+  'mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500';
 
 export const PresenceAdjustments = ({ billId, onGoToConsumptions }: PresenceAdjustmentsProps) => {
   const { bill, addDetail, removeDetail } = useBill(billId);
   const chains = useRef(new Map<string, Promise<void>>());
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [removingKey, setRemovingKey] = useState<string | null>(null);
+  const [kind, setKind] = useState<PresenceKind | ''>('');
+  const [userId, setUserId] = useState('');
+  const [itemId, setItemId] = useState('');
+  const [absentText, setAbsentText] = useState('1');
 
   if (!bill) return null;
 
-  const items = sharedEqualItems(bill);
+  const resetForm = () => {
+    setKind('');
+    setUserId('');
+    setItemId('');
+    setAbsentText('1');
+  };
 
-  const save = (userId: string, itemId: string, next: PresenceValue) => {
-    const key = `${itemId}:${userId}`;
+  const close = () => {
+    if (saving) return;
+    setOpen(false);
+    resetForm();
+  };
+
+  const savePresence = (targetUserId: string, targetItemId: string, next: PresenceValue) => {
+    const key = `${targetItemId}:${targetUserId}`;
     const previous = chains.current.get(key) ?? Promise.resolve();
     const run = previous.catch(() => undefined).then(async () => {
       const current = useBillStore.getState().currentBill;
-      const quantity = current?.items.find((item) => item.id === itemId)?.quantity ?? 0;
+      const quantity = current?.items.find((item) => item.id === targetItemId)?.quantity ?? 0;
       const existing = (current?.details || []).some(
-        (detail) => detail.itemId === itemId && detail.userId === userId
+        (detail) => detail.itemId === targetItemId && detail.userId === targetUserId
       );
 
       if (existing) {
-        await removeDetail({ userId, itemId }, { silent: true });
+        await removeDetail({ userId: targetUserId, itemId: targetItemId }, { silent: true });
       }
       if (next.arrivedAfter != null && next.arrivedAfter > 0 && next.arrivedAfter < quantity) {
         await addDetail(
-          { itemId, userId, quantityConsumed: next.arrivedAfter, action: 'join' },
+          {
+            itemId: targetItemId,
+            userId: targetUserId,
+            quantityConsumed: next.arrivedAfter,
+            action: 'join',
+          },
           { silent: true }
         );
       }
@@ -247,7 +172,12 @@ export const PresenceAdjustments = ({ billId, onGoToConsumptions }: PresenceAdju
         (next.arrivedAfter == null || next.leftAfter > next.arrivedAfter)
       ) {
         await addDetail(
-          { itemId, userId, quantityConsumed: next.leftAfter, action: 'left' },
+          {
+            itemId: targetItemId,
+            userId: targetUserId,
+            quantityConsumed: next.leftAfter,
+            action: 'left',
+          },
           { silent: true }
         );
       }
@@ -256,58 +186,237 @@ export const PresenceAdjustments = ({ billId, onGoToConsumptions }: PresenceAdju
     return run;
   };
 
+  const person = bill.participants.find((participant) => participantResolvedId(participant) === userId);
+  const itemsForPerson = userId ? eligibleItems(bill, userId) : [];
+  const item = itemsForPerson.find((candidate) => candidate.id === itemId);
+  const absent = Number(absentText);
+  const absentMax = item && kind ? maxAbsent(bill, item, userId, kind) : 0;
+  const absentValid = Number.isInteger(absent) && absent >= 1 && absent <= absentMax;
+
+  const conclude = async () => {
+    if (!item || !kind || !person || !absentValid) return;
+    const current = readPresence(bill, item.id, userId, item.quantity);
+    const next: PresenceValue =
+      kind === 'late'
+        ? { arrivedAfter: absent, leftAfter: current.leftAfter }
+        : { arrivedAfter: current.arrivedAfter, leftAfter: item.quantity - absent };
+
+    setSaving(true);
+    try {
+      await savePresence(userId, item.id, next);
+      setOpen(false);
+      resetForm();
+    } catch {
+      // Erro já tratado no hook
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    void conclude();
+  };
+
+  const removeCard = async (card: PresenceCard) => {
+    const target = bill.items.find((entry) => entry.id === card.itemId);
+    if (!target) return;
+    const current = readPresence(bill, card.itemId, card.userId, target.quantity);
+    const next: PresenceValue =
+      card.kind === 'late'
+        ? { arrivedAfter: null, leftAfter: current.leftAfter }
+        : { arrivedAfter: current.arrivedAfter, leftAfter: null };
+
+    setRemovingKey(card.key);
+    try {
+      await savePresence(card.userId, card.itemId, next);
+    } catch {
+      // Erro já tratado no hook
+    } finally {
+      setRemovingKey(null);
+    }
+  };
+
+  const cards = presenceCards(bill);
+
   return (
     <section className="mt-8">
       <h2 className="text-xl pb-5 text-center text-gray-900 text-balance">
         Alguém chegou atrasado ou foi embora antes do fim?
       </h2>
-      {items.length === 0 ? (
-        <p className="text-center text-gray-900 text-balance">
-          Itens compartilhados em partes iguais aparecem aqui. Marque os consumos em{' '}
-          {onGoToConsumptions ? (
-            <button
-              type="button"
-              onClick={onGoToConsumptions}
-              className="font-medium text-primary-600 hover:text-primary-700 underline underline-offset-2"
-            >
-              Consumos
-            </button>
-          ) : (
-            'Consumos'
-          )}
-          .
-        </p>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {items.map((item) => {
-            const assignment = getItemAssignment(bill, item.id);
-            const consumers = assignment?.weights ?? [];
-            return (
-              <section key={item.id} className="shadow-md rounded-3xl overflow-hidden">
-                <header className="bg-primary-100 px-5 py-4">
-                  <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
-                  <p className="mt-1 text-sm text-gray-700">x{item.quantity}</p>
-                </header>
-                <div className="bg-white divide-y divide-gray-100">
-                  {consumers.map((weight) => {
-                    const participant = bill.participants.find(
-                      (person) => participantResolvedId(person) === weight.participantId
-                    );
-                    if (!participant) return null;
+      <div className="flex flex-col items-center gap-4">
+        {cards.length > 0 && (
+          <div className="flex w-full flex-col gap-3">
+            {cards.map((card) => (
+              <div key={card.key} className="bg-white rounded-full shadow-md px-4 flex items-center">
+                <p className="flex-1 min-w-0 py-3 text-sm text-gray-700">
+                  {card.kind === 'late' ? (
+                    <>
+                      Antes de <span className="font-semibold">{card.personName}</span> chegar, foram consumidos{' '}
+                      <span className="font-semibold">{card.absent}</span> {card.itemName}
+                    </>
+                  ) : (
+                    <>
+                      Após <span className="font-semibold">{card.personName}</span> sair foram consumidas{' '}
+                      <span className="font-semibold">{card.absent}</span> {card.itemName}
+                    </>
+                  )}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void removeCard(card)}
+                  disabled={removingKey === card.key}
+                  aria-label="Remover"
+                  className="flex items-center justify-center w-10 h-10 shrink-0 cursor-pointer hover:opacity-70 transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="bg-primary-500 shadow-lg px-6 py-3 rounded-full flex items-center gap-2 hover:opacity-90 transition-opacity text-white font-semibold w-fit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Adicionar
+        </button>
+      </div>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button type="button" className="absolute inset-0 bg-black/40" aria-label="Fechar" onClick={close} />
+          <form
+            onSubmit={onSubmit}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="presence-title"
+            className="relative w-full max-w-md bg-white rounded-lg shadow-lg p-5"
+          >
+            <h2 id="presence-title" className="text-lg font-semibold text-gray-900">
+              Adicionar presença
+            </h2>
+
+            <label className="block text-sm text-gray-700 mt-4">
+              O que aconteceu?
+              <select
+                value={kind}
+                onChange={(event) => {
+                  setKind(event.target.value as PresenceKind | '');
+                  setUserId('');
+                  setItemId('');
+                  setAbsentText('1');
+                }}
+                className={selectClass}
+              >
+                <option value="">Selecione</option>
+                <option value="late">A pessoa atrasou</option>
+                <option value="left">A pessoa foi embora antes do fim</option>
+              </select>
+            </label>
+
+            {kind && (
+              <label className="block text-sm text-gray-700 mt-4">
+                Quem?
+                <select
+                  value={userId}
+                  onChange={(event) => {
+                    setUserId(event.target.value);
+                    setItemId('');
+                    setAbsentText('1');
+                  }}
+                  className={selectClass}
+                >
+                  <option value="">Selecione a pessoa</option>
+                  {bill.participants.map((participant) => {
+                    const id = participantResolvedId(participant);
                     return (
-                      <PresencePerson
-                        key={weight.participantId}
-                        bill={bill}
-                        item={item}
-                        participant={participant}
-                        onSave={save}
-                      />
+                      <option key={id} value={id}>
+                        {participant.name}
+                      </option>
                     );
                   })}
-                </div>
-              </section>
-            );
-          })}
+                </select>
+              </label>
+            )}
+
+            {kind && userId && (
+              <label className="block text-sm text-gray-700 mt-4">
+                Qual item foi consumido?
+                <select
+                  value={itemId}
+                  onChange={(event) => {
+                    setItemId(event.target.value);
+                    setAbsentText('1');
+                  }}
+                  className={selectClass}
+                >
+                  <option value="">Selecione o item</option>
+                  {itemsForPerson.map((candidate) => (
+                    <option key={candidate.id} value={candidate.id}>
+                      {candidate.name}
+                    </option>
+                  ))}
+                </select>
+                {itemsForPerson.length === 0 && (
+                  <p className="mt-2 text-sm text-gray-600">
+                    Nenhum item compartilhado em partes iguais para essa pessoa. Marque os consumos em{' '}
+                    {onGoToConsumptions ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          close();
+                          onGoToConsumptions();
+                        }}
+                        className="font-medium text-primary-600 hover:text-primary-700 underline underline-offset-2"
+                      >
+                        Consumos
+                      </button>
+                    ) : (
+                      'Consumos'
+                    )}
+                    .
+                  </p>
+                )}
+              </label>
+            )}
+
+            {kind && person && item && (
+              <label className="block text-sm text-gray-700 mt-4">
+                Quantos {item.name} foram consumidos sem a presença de {person.name}?
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={Math.max(absentMax, 1)}
+                  value={absentText}
+                  onChange={(event) => setAbsentText(event.target.value.replace(/\D/g, ''))}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                {absentMax < 1 && (
+                  <p className="mt-2 text-sm text-red-600">
+                    Não há unidades sobrando para esse ajuste.
+                  </p>
+                )}
+              </label>
+            )}
+
+            <div className="mt-6 flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={close} disabled={saving}>
+                Cancelar
+              </Button>
+              <Button type="submit" variant="primary" loading={saving} disabled={!absentValid || saving}>
+                Concluir
+              </Button>
+            </div>
+          </form>
         </div>
       )}
     </section>
