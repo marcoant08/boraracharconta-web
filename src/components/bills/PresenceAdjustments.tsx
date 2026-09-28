@@ -240,7 +240,7 @@ export const PresenceAdjustments = ({ billId, onGoToConsumptions }: PresenceAdju
   const cards = presenceCards(bill);
 
   return (
-    <section className="mt-8">
+    <section>
       <h2 className="text-xl pb-5 text-center text-gray-900 text-balance">
         Alguém chegou atrasado ou foi embora antes do fim?
       </h2>

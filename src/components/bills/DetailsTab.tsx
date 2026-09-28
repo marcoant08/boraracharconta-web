@@ -96,6 +96,8 @@ export const DetailsTab = ({ onGoToConsumptions }: DetailsTabProps) => {
         onConfirm={handleConfirm}
       />
 
+      <hr className="my-8 border-gray-200" />
+
       <PresenceAdjustments billId={billId} onGoToConsumptions={onGoToConsumptions} />
     </>
   );
