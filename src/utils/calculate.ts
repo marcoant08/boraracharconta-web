@@ -201,12 +201,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
   const valuePerUnit = item.value;
   const totalValue = valuePerUnit * item.quantity;
   const totalQuantityConsumed = item.quantity; // Total consumido é a quantity do item
-  // Rateio por chegada atrasada ou saída antes do fim está desligado.
-  // Eventos da linha do tempo continuam no modelo, mas não alteram a divisão.
-  const presenceTimelineSplitEnabled = false as boolean;
-  const details = (presenceTimelineSplitEnabled ? bill.details || [] : []).filter(
-    (d) => d.itemId === itemId
-  );
+  const details = (bill.details || []).filter((d) => d.itemId === itemId);
   
   // Obter participantes que realmente consumiram este item
   const itemConsumptions = getItemConsumptions(bill, itemId);

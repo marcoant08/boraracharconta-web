@@ -199,11 +199,14 @@ export const useBill = (billId?: string) => {
   );
 
   const addDetail = useCallback(
-    async (data: { itemId: string; userId: string; quantityConsumed: number; action: 'join' | 'left' }) => {
+    async (
+      data: { itemId: string; userId: string; quantityConsumed: number; action: 'join' | 'left' },
+      options?: { silent?: boolean }
+    ) => {
       if (!billId) return;
       try {
         await billService.addDetail(billId, data);
-        toast.success('Evento adicionado com sucesso!');
+        if (!options?.silent) toast.success('Evento adicionado com sucesso!');
         storeAddDetail(data);
       } catch (error: unknown) {
         const message = getAxiosErrorMessage(error, 'Erro ao adicionar evento.');
@@ -231,11 +234,11 @@ export const useBill = (billId?: string) => {
   );
 
   const removeDetail = useCallback(
-    async (data: { userId: string; itemId: string }) => {
+    async (data: { userId: string; itemId: string }, options?: { silent?: boolean }) => {
       if (!billId) return;
       try {
         await billService.removeDetail(billId, data);
-        toast.success('Detail removido com sucesso!');
+        if (!options?.silent) toast.success('Detail removido com sucesso!');
         storeRemoveDetail(data.userId, data.itemId);
       } catch (error: unknown) {
         const message = getAxiosErrorMessage(error, 'Erro ao remover detail.');

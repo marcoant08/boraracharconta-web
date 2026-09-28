@@ -100,7 +100,7 @@ export const BillTabs = () => {
         />
       );
     }
-    if (tabId === 'details') return <DetailsTab />;
+    if (tabId === 'details') return <DetailsTab onGoToConsumptions={() => changeTab('consumptions')} />;
     return (
       <StatisticsTab
         onGoToParticipants={() => changeTab('participants')}

@@ -6,9 +6,14 @@ import { useBill } from '@/hooks/useBill';
 import { UpdateServiceFeeRequest } from '@/types/bill.types';
 import { getAppliedServiceFee } from '@/utils/calculate';
 import { formatCurrency } from '@/utils/format';
+import { PresenceAdjustments } from './PresenceAdjustments';
 import { ServiceFeeModal } from './ServiceFeeModal';
 
-export const DetailsTab = () => {
+interface DetailsTabProps {
+  onGoToConsumptions?: () => void;
+}
+
+export const DetailsTab = ({ onGoToConsumptions }: DetailsTabProps) => {
   const params = useParams();
   const billId = params.billId as string;
   const { bill, updateServiceFee } = useBill(billId);
@@ -90,6 +95,8 @@ export const DetailsTab = () => {
         onClose={() => setModalOpen(false)}
         onConfirm={handleConfirm}
       />
+
+      <PresenceAdjustments billId={billId} onGoToConsumptions={onGoToConsumptions} />
     </>
   );
 };
