@@ -186,7 +186,7 @@ export const AddItemForm = () => {
     step === 'name' ? 'Nome do item' : step === 'price' ? 'Valor do item' : 'Quantidade do item';
 
   return (
-    <form onSubmit={onSubmit} className="flex items-center gap-3 pt-5">
+    <form onSubmit={onSubmit} className="flex w-full min-w-0 items-center gap-3 pt-5">
       <p className="sr-only" aria-live="polite">
         {stepLabel}
       </p>
@@ -246,15 +246,15 @@ export const AddItemForm = () => {
         )}
 
         {step === 'quantity' && (
-          <div className="relative">
+          <div className="relative min-w-0">
             <FieldLabel htmlFor="bill-quantity">Quantidade</FieldLabel>
-            <div className="flex items-center bg-white w-full rounded-full shadow-md h-14 px-1.5 focus-within:ring-2 focus-within:ring-primary-600 focus-within:ring-offset-2 focus-within:ring-offset-gray-50">
+            <div className="flex items-center bg-white w-full min-w-0 rounded-full shadow-md h-14 px-1.5 focus-within:ring-2 focus-within:ring-primary-600 focus-within:ring-offset-2 focus-within:ring-offset-gray-50">
               <button
                 type="button"
                 onClick={() => changeQuantity(quantity - 1)}
                 disabled={submitting || quantity <= 1}
                 aria-label="Diminuir quantidade"
-                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-900 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+                className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-gray-900 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
               >
                 <MinusIcon />
               </button>
@@ -271,14 +271,14 @@ export const AddItemForm = () => {
                 onBlur={() => {
                   if (parseQuantity(quantityText) < 1) setQuantityText('1');
                 }}
-                className="min-w-0 flex-1 bg-transparent text-center text-lg font-semibold tabular-nums text-gray-900 outline-none"
+                className="w-0 min-w-0 flex-1 bg-transparent text-center text-lg font-semibold tabular-nums text-gray-900 outline-none"
               />
               <button
                 type="button"
                 onClick={() => changeQuantity(quantity + 1)}
                 disabled={submitting || quantity >= 99999}
                 aria-label="Aumentar quantidade"
-                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-900 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+                className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-gray-900 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
               >
                 <PlusIcon />
               </button>

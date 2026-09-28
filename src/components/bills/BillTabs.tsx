@@ -3,7 +3,7 @@
 import { useEffect, useState, type AnimationEvent } from 'react';
 import { Tabs } from '@/components/ui/Tabs';
 import { useBillStore } from '@/store/bill.store';
-import { isConsumptionStepComplete } from '@/utils/calculate';
+import { isConsumptionStepComplete, isServiceFeeApplied } from '@/utils/calculate';
 import { ParticipantsTab } from './ParticipantsTab';
 import { ItemsTab } from './ItemsTab';
 import { ConsumptionsTab } from './ConsumptionsTab';
@@ -35,7 +35,7 @@ export const BillTabs = () => {
   const itemsComplete = (bill?.items.length ?? 0) > 0;
   const consumptionsComplete = bill ? isConsumptionStepComplete(bill) : false;
   const detailsComplete = true;
-  const hasDetail = (bill?.details.length ?? 0) > 0;
+  const serviceFeeApplied = bill ? isServiceFeeApplied(bill) : false;
 
   const completeByTab: Record<(typeof tabDefs)[number]['id'], boolean> = {
     participants: participantsComplete,
@@ -50,7 +50,7 @@ export const BillTabs = () => {
   const tabs = tabDefs.map((tab, index) => ({
     ...tab,
     complete: completeByTab[tab.id],
-    checked: tab.id === 'details' ? hasDetail || index < activeIndex : undefined,
+    checked: tab.id === 'details' ? serviceFeeApplied || index < activeIndex : undefined,
   }));
 
   const changeTab = (tabId: string) => {
