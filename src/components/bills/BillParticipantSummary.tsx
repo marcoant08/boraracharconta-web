@@ -36,7 +36,7 @@ export const BillParticipantSummary = ({ bill }: Props) => {
   return (
     <Card title="Resumo por Participante">
       <div className="space-y-3">
-        {participantTotals.map(({ participant, total }) => {
+        {participantTotals.map(({ participant, total, subtotal }) => {
           const participantId = participantResolvedId(participant);
           const consumedItems = getConsumedItems(participantId);
 
@@ -64,7 +64,12 @@ export const BillParticipantSummary = ({ bill }: Props) => {
               </div>
               <div className="text-right shrink-0">
                 <span className="text-lg font-bold text-primary-600">{formatCurrency(total)}</span>
-                {feeLabel && <p className="text-xs text-gray-500">{feeLabel}</p>}
+                {feeLabel && (
+                  <>
+                    <p className="text-xs text-gray-500">{feeLabel}</p>
+                    <p className="text-xs text-gray-500">sem taxa: {formatCurrency(subtotal)}</p>
+                  </>
+                )}
               </div>
             </div>
           );
