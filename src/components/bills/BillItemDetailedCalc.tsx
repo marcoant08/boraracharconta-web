@@ -23,8 +23,8 @@ const Chevron = ({ up }: { up: boolean }) => (
 );
 
 const ItemDetailedCalc = ({ bill, item }: { bill: BillResponseDto; item: BillItemDto }) => {
-  const [open, setOpen] = useState(false);
-  const toggle = () => setOpen((current) => !current);
+  const [open, setOpen] = useState<boolean>(false);
+  const toggle = () => setOpen(!open);
   const division = calculateItemDivision(bill, item.id);
   if (!division || division.totalConsumed === 0) return null;
   const assignment = getItemAssignment(bill, item.id);

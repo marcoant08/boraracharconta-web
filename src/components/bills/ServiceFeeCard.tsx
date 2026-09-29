@@ -23,12 +23,12 @@ const Chevron = ({ up }: { up: boolean }) => (
 );
 
 export const ServiceFeeCard = ({ bill }: Props) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
   if (!isServiceFeeApplied(bill)) return null;
 
   const { participantTotals, serviceFee, feeConfig, fixedShare } = calculateBillTotals(bill);
   const participantCount = bill.participants.length;
-  const toggle = () => setOpen((current) => !current);
+  const toggle = () => setOpen(!open);
 
   return (
     <Card title="Taxa de serviço">
