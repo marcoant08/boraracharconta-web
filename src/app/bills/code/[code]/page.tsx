@@ -180,13 +180,13 @@ export default function BillCodePage() {
                   <div>
                     <span className="font-semibold text-gray-900">{item.name}</span>
                     <span className="ml-2 text-sm text-gray-500">x{item.quantity}</span>
-                    {item.category && (
-                      <span className="ml-2 px-2 py-0.5 text-xs bg-gray-200 text-gray-700 rounded">
-                        {item.category}
-                      </span>
-                    )}
                   </div>
-                  <span className="font-bold text-primary-600">{formatCurrency(item.value)}</span>
+                  <div className="text-right shrink-0">
+                    <span className="font-bold text-primary-600">{formatCurrency(item.value)}</span>
+                    <p className="text-xs text-gray-500">
+                      total: {formatCurrency(item.value * item.quantity)}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
