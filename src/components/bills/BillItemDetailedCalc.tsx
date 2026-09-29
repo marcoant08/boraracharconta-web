@@ -89,7 +89,7 @@ const ItemDetailedCalc = ({ bill, item }: { bill: BillResponseDto; item: BillIte
       </div>
 
       <div className="mt-4">
-        <h5 className="font-semibold text-gray-900 mb-2">Total por participante</h5>
+        <h5 className="font-semibold text-gray-900 mb-2">Total para cada participante</h5>
         <div className="space-y-2">
           {division.participantTotals.map((pt) => (
             <div

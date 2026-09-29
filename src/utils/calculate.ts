@@ -311,7 +311,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
     });
 
     steps.push({
-      description: `\nTotal por participante:`,
+      description: `\nTotal para cada participante:`,
     });
 
     const participantTotals = Array.from(participantTotalsMap.values()).map((pt) => {
@@ -523,7 +523,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
   }
 
   steps.push({
-    description: `\n💰 Total por participante:`,
+    description: `\n💰 Total para cada participante:`,
   });
 
   const participantTotals = Array.from(participantTotalsMap.values()).map((pt) => {
