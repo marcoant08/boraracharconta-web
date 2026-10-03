@@ -12,7 +12,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: 'Divisão de Contas',
+  title: 'racha conta',
   description: 'Aplicação para dividir contas entre amigos',
   icons: {
     icon: '/friends.PNG',
