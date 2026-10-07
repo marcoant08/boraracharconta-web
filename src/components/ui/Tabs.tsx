@@ -1,4 +1,6 @@
-import { ReactNode } from 'react';
+'use client';
+
+import { ReactNode, useLayoutEffect, useRef } from 'react';
 
 interface Tab {
   id: string;
@@ -43,6 +45,8 @@ const XIcon = () => (
 );
 
 export const Tabs = ({ tabs, activeTab, onTabChange, children }: TabsProps) => {
+  const barRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const activeIndex = Math.max(
     0,
     tabs.findIndex((tab) => tab.id === activeTab)
@@ -56,10 +60,32 @@ export const Tabs = ({ tabs, activeTab, onTabChange, children }: TabsProps) => {
   const barMotion =
     'transition-[width,left] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none';
 
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    const scroller = scrollerRef.current;
+    if (!bar || !scroller) return;
+
+    const apply = () => {
+      scroller.style.setProperty('--tab-bar-height', `${bar.offsetHeight}px`);
+      scroller.style.setProperty('--scrollport-height', `${scroller.clientHeight}px`);
+    };
+
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(bar);
+    observer.observe(scroller);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="w-full h-full flex flex-col relative">
-      <div className="flex-1 overflow-x-hidden overflow-y-auto pb-36 px-4">{children}</div>
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-card z-10">
+    <div className="relative flex min-h-0 w-full flex-1 flex-col">
+      <div ref={scrollerRef} className="h-0 min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto">
+        {children}
+      </div>
+      <div
+        ref={barRef}
+        className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-200 bg-white shadow-card"
+      >
         <div className="max-w-3xl mx-auto">
           <nav className="relative flex" aria-label="Etapas da conta">
             <div

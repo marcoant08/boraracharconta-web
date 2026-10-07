@@ -9,6 +9,7 @@ import { ItemsTab } from './ItemsTab';
 import { ConsumptionsTab } from './ConsumptionsTab';
 import { StatisticsTab } from './StatisticsTab';
 import { DetailsTab } from './DetailsTab';
+import { AppFooter } from '@/components/ui/AppFooter';
 import { UserThreeIcon } from '@/components/icons/UserThreeIcon';
 import { ShoppingCartIcon } from '@/components/icons/ShoppingCartIcon';
 import { UserCheckIcon } from '@/components/icons/UserCheckIcon';
@@ -119,7 +120,11 @@ export const BillTabs = () => {
 
   return (
     <Tabs tabs={tabs} activeTab={activeTab} onTabChange={changeTab}>
-      <div className="grid">
+      <div
+        className="mx-auto w-full max-w-3xl px-4 pt-8 sm:px-10 lg:px-12"
+        style={{ minHeight: 'calc(var(--scrollport-height) - var(--tab-bar-height) + 2px)' }}
+      >
+        <div className="grid">
         {motion && (
           <div
             key={motion.leaving}
@@ -136,7 +141,10 @@ export const BillTabs = () => {
         <div key={activeTab} className={`col-start-1 row-start-1 ${incomingClass}`}>
           {renderTab(activeTab)}
         </div>
+        </div>
       </div>
+      <AppFooter />
+      <div aria-hidden="true" style={{ height: 'var(--tab-bar-height)' }} />
     </Tabs>
   );
 };

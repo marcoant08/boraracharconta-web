@@ -7,7 +7,6 @@ import { useBillStore } from '@/store/bill.store';
 import { BillTabs } from '@/components/bills/BillTabs';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { AppFooter } from '@/components/ui/AppFooter';
 import { formatCode } from '@/utils/format';
 import toast from 'react-hot-toast';
 import { AppNavbar } from '@/components/ui/AppNavbar';
@@ -84,8 +83,8 @@ export default function BillPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-40">
+    <div className="flex h-dvh flex-col overflow-hidden bg-gray-50">
+      <div className="shrink-0">
         <AppNavbar action="back" sticky={false} />
         <header className="bg-white border-b border-gray-200">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -106,10 +105,9 @@ export default function BillPage() {
         </header>
       </div>
 
-      <main className="flex-1 max-w-3xl mx-auto sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
         <BillTabs />
       </main>
-      <AppFooter />
     </div>
   );
 }
