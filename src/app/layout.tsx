@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Fraunces, Inter } from 'next/font/google';
+import { Cantata_One, Fraunces, Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
@@ -9,6 +9,11 @@ const inter = Inter({ subsets: ['latin'] });
 const fraunces = Fraunces({
   subsets: ['latin'],
   variable: '--font-display',
+});
+const cantata = Cantata_One({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-cantata',
 });
 
 export const metadata: Metadata = {
@@ -31,7 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.className} ${fraunces.variable}`}>
+      <body className={`${inter.className} ${fraunces.variable} ${cantata.variable}`}>
         <Providers>
           {children}
           <Toaster

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { AppNavbar } from '@/components/ui/AppNavbar';
 import { AppFooter } from '@/components/ui/AppFooter';
+import { LandingSplit } from '@/components/landing/LandingSplit';
 import { NotePencilIcon } from '@/components/icons/NotePencilIcon';
 import { formatCode } from '@/utils/format';
 import Link from 'next/link';
@@ -88,46 +89,17 @@ export default function HomePage() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <AppNavbar action="public" />
-        <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-          <div className="text-center mb-10">
-            <h1 className="font-display text-3xl sm:text-4xl text-gray-900 text-balance leading-tight">
-              Crie uma conta e comece a dividir despesas com seus amigos
-            </h1>
-          </div>
-          <Card className="text-center mb-8">
-            <p className="text-gray-600 mb-6">
-              Veja uma conta pública pelo código, sem precisar entrar
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/bills/code">
-                <Button variant="primary" size="lg" className="w-full sm:w-auto">
-                  Ver por Código
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button variant="secondary" size="lg" className="w-full sm:w-auto">
-                  Entrar
-                </Button>
-              </Link>
-            </div>
-          </Card>
-        </main>
-        <AppFooter />
-      </div>
-    );
+    return <LandingSplit />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-paper flex flex-col">
       <AppNavbar action="logout" />
 
-      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-        <div className="text-center mb-10">
-          <h1 className="font-display text-3xl sm:text-4xl text-gray-900 text-balance leading-tight">
-            Crie uma conta e comece a dividir despesas com seus amigos
+      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+        <div className="mb-8">
+          <h1 className="font-display text-3xl sm:text-4xl text-ink text-balance leading-tight">
+            Suas contas
           </h1>
         </div>
 
@@ -291,26 +263,6 @@ export default function HomePage() {
           )}
         </Card>
 
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <h4 className="font-semibold text-gray-900 mb-2">Crie Contas</h4>
-            <p className="text-gray-600 text-sm">
-              Crie uma conta e compartilhe o código com seus amigos
-            </p>
-          </Card>
-          <Card>
-            <h4 className="font-semibold text-gray-900 mb-2">Adicione Itens</h4>
-            <p className="text-gray-600 text-sm">
-              Adicione itens e valores para dividir entre os participantes
-            </p>
-          </Card>
-          <Card>
-            <h4 className="font-semibold text-gray-900 mb-2">Veja Estatísticas</h4>
-            <p className="text-gray-600 text-sm">
-              Visualize quanto cada pessoa deve pagar automaticamente
-            </p>
-          </Card>
-        </div>
       </main>
       <AppFooter />
     </div>

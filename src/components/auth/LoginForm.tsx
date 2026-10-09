@@ -7,7 +7,7 @@ import { GitHubIcon } from '@/components/icons/GitHubIcon';
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 const ssoButtonClassName =
-  'flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-900 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2';
+  'flex w-full items-center justify-center gap-2 rounded-xl border border-[#d7d0c4] bg-[#f7f8f7] px-4 py-3 text-base font-medium text-[#0c2919] transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#297747] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7ede0]';
 
 function ssoUrl(apiBaseUrl: string, provider: 'google' | 'github'): string {
   const url = new URL(`${apiBaseUrl}/auth/${provider}`);
