@@ -143,7 +143,9 @@ export const BillTabs = () => {
         </div>
         </div>
       </div>
-      <AppFooter />
+      <div className="mt-10">
+        <AppFooter />
+      </div>
       <div aria-hidden="true" style={{ height: 'var(--tab-bar-height)' }} />
     </Tabs>
   );

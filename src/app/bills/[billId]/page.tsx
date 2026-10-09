@@ -86,7 +86,7 @@ export default function BillPage() {
     <div className="flex h-dvh flex-col overflow-hidden bg-[#f7ede0] text-[#0c2919]">
       <div className="shrink-0">
         <AppNavbar action="back" sticky={false} />
-        <header className="border-b border-[#e4d8c6] bg-[#f7ede0]">
+        <header className="bg-[#f7ede0]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
