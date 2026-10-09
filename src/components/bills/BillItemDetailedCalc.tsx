@@ -29,6 +29,14 @@ const ItemDetailedCalc = ({ bill, item }: { bill: BillResponseDto; item: BillIte
   const division = calculateItemDivision(bill, item.id);
   if (!division || division.totalConsumed === 0) return null;
   const assignment = getItemAssignment(bill, item.id);
+  const firstNote = division.participantTotals[0]?.breakdown[0]?.description;
+  const sharedNote =
+    firstNote &&
+    division.participantTotals.every(
+      (pt) => pt.breakdown.length === 1 && pt.breakdown[0].description === firstNote
+    )
+      ? firstNote
+      : null;
 
   return (
     <div className="p-3 lg:p-4 border border-gray-200 rounded-lg">
@@ -90,7 +98,8 @@ const ItemDetailedCalc = ({ bill, item }: { bill: BillResponseDto; item: BillIte
       </div>
 
       <div className="mt-4">
-        <h5 className="font-semibold text-gray-900 mb-2">Total para cada participante</h5>
+        <h5 className="font-semibold text-gray-900 mb-2">Por pessoa</h5>
+        {sharedNote ? <p className="text-xs text-gray-600 mb-2">{sharedNote}</p> : null}
         <div className="space-y-2">
           {division.participantTotals.map((pt) => (
             <div
@@ -99,11 +108,12 @@ const ItemDetailedCalc = ({ bill, item }: { bill: BillResponseDto; item: BillIte
             >
               <div className="flex-1">
                 <div className="font-medium text-gray-900">{pt.participantName}</div>
-                {pt.breakdown.length > 0 && (
+                {!sharedNote && pt.breakdown.length > 0 && (
                   <div className="text-xs text-gray-600 mt-1 space-y-1">
                     {pt.breakdown.map((b, idx) => (
                       <div key={idx}>
-                        • {b.description}: {formatCurrency(b.value)}
+                        {b.description}
+                        {pt.breakdown.length > 1 ? ` · ${formatCurrency(b.value)}` : ''}
                       </div>
                     ))}
                   </div>

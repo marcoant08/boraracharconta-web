@@ -46,6 +46,9 @@ const joinNames = (names: string[]): string => {
 const unitLabel = (count: number): string =>
   count === 1 ? 'unidade' : 'unidades';
 
+const equalSplitNote = (units: number, people: number): string =>
+  `${units} un. dividida${units > 1 ? 's' : ''} pra ${people} pessoa${people > 1 ? 's' : ''}`;
+
 const buildAssignmentConsequence = (
   itemQuantity: number,
   weights: ItemAssignmentWeight[],
@@ -301,7 +304,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
       if (participantTotal) {
         participantTotal.total += share;
         participantTotal.breakdown.push({
-          description: `${weight.quantity}/${totalWeight} do total (${weight.quantity} ${unitLabel(weight.quantity)})`,
+          description: `${weight.quantity} de ${totalWeight}`,
           value: share,
         });
       }
@@ -453,7 +456,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
             if (participantTotal) {
               participantTotal.total += valuePerParticipant;
               participantTotal.breakdown.push({
-                description: `Período ${previousQuantity}-${currentQuantity}: ${periodQuantity} unidade${periodQuantity > 1 ? 's' : ''} (${presentParticipantsNames})`,
+                description: `${previousQuantity}–${currentQuantity} · ${periodQuantity} un.`,
                 value: valuePerParticipant,
               });
             }
@@ -485,7 +488,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
         if (participantTotal) {
           participantTotal.total += valuePerParticipant;
           participantTotal.breakdown.push({
-            description: `Consumo total dividido igualmente (${totalQuantityConsumed} unidade${totalQuantityConsumed > 1 ? 's' : ''})`,
+            description: equalSplitNote(totalQuantityConsumed, consumingParticipants.length),
             value: valuePerParticipant,
           });
         }
@@ -515,7 +518,7 @@ export const calculateItemDivision = (bill: BillResponseDto, itemId: string): It
       if (participantTotal) {
         participantTotal.total += valuePerParticipant;
         participantTotal.breakdown.push({
-          description: `Consumo total dividido igualmente (${totalQuantityConsumed} unidade${totalQuantityConsumed > 1 ? 's' : ''})`,
+          description: equalSplitNote(totalQuantityConsumed, consumingParticipants.length),
           value: valuePerParticipant,
         });
       }
