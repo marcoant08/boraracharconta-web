@@ -50,53 +50,24 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
+  container-type: inline-size;
 }
 
-.plateFrame::before {
-  content: "";
+.plate {
   position: absolute;
-  top: 2.75rem;
-  right: 0;
-  bottom: 2.6rem;
-  left: 0;
-  background: #fbfaf6;
-}
-
-.capTop,
-.capBottom {
-  position: absolute;
-  left: -0.9%;
-  width: 112%;
-  overflow: hidden;
-}
-
-.capTop {
+  /* The slip bitmap is 768px wide; the opaque sheet runs from x=8 to x=686. */
+  left: calc(8 / 678 * -100%);
+  width: calc(768 / 678 * 100%);
   top: 0;
-  height: 2.75rem;
-}
-
-.capBottom {
   bottom: 0;
-  height: 2.6rem;
-}
-
-.capTop img,
-.capBottom img {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  max-width: none;
-  height: auto;
-}
-
-.capTop img {
-  top: 0;
-  transform: translateY(-5.2%);
-}
-
-.capBottom img {
-  bottom: 0;
-  transform: translateY(5.3%);
+  margin-top: calc(55 / 678 * -100%);
+  margin-bottom: calc(58 / 678 * -100%);
+  border-style: solid;
+  border-width: 0;
+  border-image-source: url('/assets/plates/slip-card.png');
+  border-image-slice: 100 0 120 0 fill;
+  border-image-width: calc(100 / 678 * 100cqi) 0 calc(120 / 678 * 100cqi);
+  border-image-repeat: stretch;
 }
 
 .slipTitle {

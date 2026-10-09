@@ -6,12 +6,7 @@ export function PaperSlip({ title, children }: { title?: string; children: React
   return (
     <section className={styles.slip}>
       <div className={styles.plateFrame} aria-hidden="true">
-        <div className={styles.capTop}>
-          <img src="/assets/plates/slip-card.png" alt="" />
-        </div>
-        <div className={styles.capBottom}>
-          <img src="/assets/plates/slip-card.png" alt="" />
-        </div>
+        <div className={styles.plate} />
       </div>
       <div className={styles.body}>
         {title ? <h2 className={styles.slipTitle}>{title}</h2> : null}
