@@ -11,6 +11,8 @@ interface Props {
   paper?: boolean;
 }
 
+const cents = (value: number) => Math.round(value * 100);
+
 const Chevron = ({ up }: { up: boolean }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -37,6 +39,8 @@ const ItemDetailedCalc = ({ bill, item }: { bill: BillResponseDto; item: BillIte
     )
       ? firstNote
       : null;
+  const assignedCents = division.participantTotals.reduce((sum, pt) => sum + cents(pt.total), 0);
+  const gapCents = cents(division.totalValue) - assignedCents;
 
   return (
     <div className="p-3 lg:p-4 border border-gray-200 rounded-lg">
@@ -123,6 +127,13 @@ const ItemDetailedCalc = ({ bill, item }: { bill: BillResponseDto; item: BillIte
             </div>
           ))}
         </div>
+        {gapCents !== 0 ? (
+          <p className="mt-3 text-center text-sm text-red-800" role="status">
+            {gapCents > 0
+              ? `alguém deve pagar ${formatCurrency(gapCents / 100)} a mais pra fechar o valor total`
+              : `passou ${formatCurrency(Math.abs(gapCents) / 100)} do total`}
+          </p>
+        ) : null}
       </div>
     </div>
   );
