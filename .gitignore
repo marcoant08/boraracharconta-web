@@ -37,11 +37,6 @@ next-env.d.ts
 # Impeccable: local runtime state (skill lives in .cursor)
 **/skills/impeccable/scripts/bin/
 **/skills/impeccable/scripts/config.json
-.impeccable/config.local.json
-.impeccable/history/
-.impeccable/live/
-.impeccable/mocks/
-.impeccable/critique/*
-!.impeccable/critique/ignore.md
+.impeccable/
 **/.impeccable/hook.cache.json
 **/.impeccable/hook.pending.json
