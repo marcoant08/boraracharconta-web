@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { formatCode } from '@/utils/format';
 import toast from 'react-hot-toast';
 import { AppNavbar } from '@/components/ui/AppNavbar';
-import { CopyIcon } from '@/components/icons/CopyIcon';
+import { ShareIcon } from '@/components/icons/ShareIcon';
 
 export default function BillPage() {
   const params = useParams();
@@ -97,7 +97,7 @@ export default function BillPage() {
             </div>
             <div className="flex gap-4">
               <Button variant="secondary" onClick={copyInviteLink}>
-                <CopyIcon />
+                <ShareIcon />
               </Button>
             </div>
           </div>

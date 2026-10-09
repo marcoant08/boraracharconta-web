@@ -15,7 +15,7 @@ import { AppFooter } from '@/components/ui/AppFooter';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { AppNavbar } from '@/components/ui/AppNavbar';
-import { CopyIcon } from '@/components/icons/CopyIcon';
+import { ShareIcon } from '@/components/icons/ShareIcon';
 import { withEqualSplitFlags } from '@/utils/equal-split';
 
 type PageError = 'private' | 'not_found' | null;
@@ -137,7 +137,7 @@ export default function BillCodePage() {
             </p>
           </div>
           <button type="button" className={desk.iconBtn} onClick={copyInviteLink} aria-label="Copiar link da conta">
-            <CopyIcon size={20} />
+            <ShareIcon size={20} />
           </button>
         </div>
 
