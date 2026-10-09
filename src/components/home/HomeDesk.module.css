@@ -41,26 +41,78 @@
 
 .slip {
   position: relative;
-  overflow: hidden;
   color: var(--ink);
 }
 
-.plate {
+.plateFrame {
   position: absolute;
+  inset: 0;
   z-index: 0;
-  top: -5.7%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.plateFrame::before {
+  content: "";
+  position: absolute;
+  top: 2.75rem;
+  right: 0;
+  bottom: 2.6rem;
+  left: 0;
+  background: #fbfaf6;
+}
+
+.capTop,
+.capBottom {
+  position: absolute;
   left: -0.9%;
   width: 112%;
+  overflow: hidden;
+}
+
+.capTop {
+  top: 0;
+  height: 2.75rem;
+}
+
+.capBottom {
+  bottom: 0;
+  height: 2.6rem;
+}
+
+.capTop img,
+.capBottom img {
+  position: absolute;
+  left: 0;
+  width: 100%;
   max-width: none;
-  height: 111.6%;
-  object-fit: fill;
-  pointer-events: none;
+  height: auto;
+}
+
+.capTop img {
+  top: 0;
+  transform: translateY(-5.2%);
+}
+
+.capBottom img {
+  bottom: 0;
+  transform: translateY(5.3%);
+}
+
+.slipTitle {
+  margin: 0 0 1rem;
+  font-family: var(--font-cantata), 'Cantata One', serif;
+  font-size: clamp(1.35rem, 4vw, 1.55rem);
+  font-weight: 400;
+  line-height: 1.15;
+  color: #0b2a19;
 }
 
 .body {
   position: relative;
   z-index: 1;
-  padding: 1.7rem 1.65rem 2.35rem 1.4rem;
+  padding: 3.2rem 1.65rem 3.5rem 1.4rem;
+  overflow-x: auto;
 }
 
 .lead,

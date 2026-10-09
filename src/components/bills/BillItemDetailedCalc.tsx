@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { BillItemDto, BillResponseDto } from '@/types/bill.types';
-import { Card } from '@/components/ui/Card';
+import { SlipOrCard } from '@/components/home/PaperSlip';
 import { formatCurrency } from '@/utils/format';
 import { calculateItemDivision, getItemAssignment } from '@/utils/calculate';
 
 interface Props {
   bill: BillResponseDto;
+  paper?: boolean;
 }
 
 const Chevron = ({ up }: { up: boolean }) => (
@@ -117,14 +118,14 @@ const ItemDetailedCalc = ({ bill, item }: { bill: BillResponseDto; item: BillIte
   );
 };
 
-export const BillItemDetailedCalc = ({ bill }: Props) => {
+export const BillItemDetailedCalc = ({ bill, paper = false }: Props) => {
   return (
-    <Card title="Cálculo Detalhado por Item">
+    <SlipOrCard paper={paper} title="Cálculo Detalhado por Item">
       <div className="space-y-6">
         {bill.items.map((item) => (
           <ItemDetailedCalc key={item.id} bill={bill} item={item} />
         ))}
       </div>
-    </Card>
+    </SlipOrCard>
   );
 };

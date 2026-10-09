@@ -1,13 +1,14 @@
 import { BillResponseDto, participantResolvedId } from '@/types/bill.types';
-import { Card } from '@/components/ui/Card';
+import { SlipOrCard } from '@/components/home/PaperSlip';
 import { formatCurrency } from '@/utils/format';
 import { calculateBillTotals, getConsumptionWeight, getItemAssignment, getParticipantConsumptions } from '@/utils/calculate';
 
 interface Props {
   bill: BillResponseDto;
+  paper?: boolean;
 }
 
-export const BillParticipantSummary = ({ bill }: Props) => {
+export const BillParticipantSummary = ({ bill, paper = false }: Props) => {
   const { participantTotals, subtotal, serviceFee, grandTotal, feeConfig } = calculateBillTotals(bill);
   const feeApplied = feeConfig.enabled;
 
@@ -34,7 +35,7 @@ export const BillParticipantSummary = ({ bill }: Props) => {
         : null;
 
   return (
-    <Card title="Resumo por Participante">
+    <SlipOrCard paper={paper} title="Resumo por Participante">
       <div className="space-y-3">
         {participantTotals.map(({ participant, total, subtotal }) => {
           const participantId = participantResolvedId(participant);
@@ -98,6 +99,6 @@ export const BillParticipantSummary = ({ bill }: Props) => {
           <span className="text-2xl font-bold text-primary-600">{formatCurrency(grandTotal)}</span>
         </div>
       </div>
-    </Card>
+    </SlipOrCard>
   );
 };

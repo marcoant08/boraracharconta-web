@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { BillResponseDto, participantResolvedId } from '@/types/bill.types';
-import { Card } from '@/components/ui/Card';
+import { SlipOrCard } from '@/components/home/PaperSlip';
 import { formatCurrency } from '@/utils/format';
 import { calculateBillTotals, isServiceFeeApplied } from '@/utils/calculate';
 
 interface Props {
   bill: BillResponseDto;
+  paper?: boolean;
 }
 
 const Chevron = ({ up }: { up: boolean }) => (
@@ -22,7 +23,7 @@ const Chevron = ({ up }: { up: boolean }) => (
   </svg>
 );
 
-export const ServiceFeeCard = ({ bill }: Props) => {
+export const ServiceFeeCard = ({ bill, paper = false }: Props) => {
   const [open, setOpen] = useState<boolean>(false);
   if (!isServiceFeeApplied(bill)) return null;
 
@@ -31,7 +32,7 @@ export const ServiceFeeCard = ({ bill }: Props) => {
   const toggle = () => setOpen(!open);
 
   return (
-    <Card title="Taxa de serviço">
+    <SlipOrCard paper={paper} title="Taxa de serviço">
       <div className="text-sm text-gray-700">
         <button
           type="button"
@@ -98,6 +99,6 @@ export const ServiceFeeCard = ({ bill }: Props) => {
           </div>
         </div>
       </div>
-    </Card>
+    </SlipOrCard>
   );
 };

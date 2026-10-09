@@ -1,11 +1,35 @@
 import { ReactNode } from 'react';
+import { Card } from '@/components/ui/Card';
 import styles from './HomeDesk.module.css';
 
-export function PaperSlip({ children }: { children: ReactNode }) {
+export function PaperSlip({ title, children }: { title?: string; children: ReactNode }) {
   return (
     <section className={styles.slip}>
-      <img className={styles.plate} src="/assets/plates/slip-card.png" alt="" />
-      <div className={styles.body}>{children}</div>
+      <div className={styles.plateFrame} aria-hidden="true">
+        <div className={styles.capTop}>
+          <img src="/assets/plates/slip-card.png" alt="" />
+        </div>
+        <div className={styles.capBottom}>
+          <img src="/assets/plates/slip-card.png" alt="" />
+        </div>
+      </div>
+      <div className={styles.body}>
+        {title ? <h2 className={styles.slipTitle}>{title}</h2> : null}
+        {children}
+      </div>
     </section>
   );
+}
+
+export function SlipOrCard({
+  paper = false,
+  title,
+  children,
+}: {
+  paper?: boolean;
+  title?: string;
+  children: ReactNode;
+}) {
+  if (paper) return <PaperSlip title={title}>{children}</PaperSlip>;
+  return <Card title={title}>{children}</Card>;
 }

@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { billService } from '@/services/bill.service';
 import { BillResponseDto, participantResolvedId } from '@/types/bill.types';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { PaperSlip } from '@/components/home/PaperSlip';
+import desk from '@/components/home/HomeDesk.module.css';
+import codeStyles from './BillCode.module.css';
 import { formatCurrency, formatCode } from '@/utils/format';
 import { BillParticipantSummary } from '@/components/bills/BillParticipantSummary';
 import { BillItemDetailedCalc } from '@/components/bills/BillItemDetailedCalc';
@@ -58,10 +59,10 @@ export default function BillCodePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`${desk.desk} items-center justify-center`}>
         <div className="text-center">
           <svg
-            className="animate-spin h-12 w-12 text-primary-600 mx-auto"
+            className={`${desk.spinner} h-12 w-12`}
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -74,7 +75,7 @@ export default function BillCodePage() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          <p className="mt-4 text-gray-600">Carregando conta...</p>
+          <p className="mt-4">Carregando conta...</p>
         </div>
       </div>
     );
@@ -82,19 +83,18 @@ export default function BillCodePage() {
 
   if (pageError === 'private') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card>
-          <>
-            <div className="text-center py-4">
-              <p className="text-2xl mb-2">🔒</p>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Esta conta é privada</h2>
-              <p className="text-gray-600 mb-6">O administrador ainda não tornou esta conta pública.</p>
-              <Link href="/">
-                <Button variant="primary">Voltar para Home</Button>
+      <div className={desk.desk}>
+        <AppNavbar action="public" />
+        <main className={`${desk.main} flex flex-col justify-center`}>
+          <PaperSlip title="Esta conta é privada">
+            <div className={codeStyles.notice}>
+              <p>O administrador ainda não tornou esta conta pública.</p>
+              <Link className={desk.create} href="/">
+                Voltar para Home
               </Link>
             </div>
-          </>
-        </Card>
+          </PaperSlip>
+        </main>
       </div>
     );
   }
@@ -108,99 +108,83 @@ export default function BillCodePage() {
 
   if (pageError === 'not_found' || !bill) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card>
-          <>
-            <div className="text-center py-4">
-              <h2 className="font-display text-xl font-semibold text-gray-900 mb-2">Conta não encontrada</h2>
-              <p className="text-gray-600 mb-6">Verifique o código e tente novamente.</p>
-              <Link href="/">
-                <Button variant="primary">Voltar para Home</Button>
+      <div className={desk.desk}>
+        <AppNavbar action="public" />
+        <main className={`${desk.main} flex flex-col justify-center`}>
+          <PaperSlip title="Conta não encontrada">
+            <div className={codeStyles.notice}>
+              <p>Verifique o código e tente novamente.</p>
+              <Link className={desk.create} href="/">
+                Voltar para Home
               </Link>
             </div>
-          </>
-        </Card>
+          </PaperSlip>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-40">
-        <AppNavbar action="public" sticky={false} />
-        <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{bill.name}</h1>
-              <p className="text-gray-600 mt-1">
-                Código: <span className="font-mono font-semibold tracking-wide">{formatCode(bill.code)}</span>
-              </p>
-            </div>
-            <div className="flex gap-4">
-              <Button variant="secondary" onClick={copyInviteLink}>
-                <CopyIcon />
-              </Button>
-            </div>
+    <div className={desk.desk}>
+      <AppNavbar action="public" />
+
+      <main className={desk.main}>
+        <div className={codeStyles.head}>
+          <div className="min-w-0">
+            <h1 className={codeStyles.name}>{bill.name}</h1>
+            <p className={codeStyles.codeLine}>
+              Código: <span className={desk.codeValue}>{formatCode(bill.code)}</span>
+            </p>
           </div>
-          </div>
-        </header>
-      </div>
+          <button type="button" className={desk.iconBtn} onClick={copyInviteLink} aria-label="Copiar link da conta">
+            <CopyIcon size={20} />
+          </button>
+        </div>
 
-      <main className="flex-1 max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8 w-full space-y-6">
-        {/* Participantes */}
-        <Card title="Participantes">
-          {bill.participants.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">Nenhum participante ainda.</p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {bill.participants.map((participant) => (
-                <div
-                  key={participantResolvedId(participant)}
-                  className="bg-gray-50 rounded-full px-4 py-3 flex items-center gap-3"
-                >
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span className="font-semibold text-gray-900">{participant.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        {/* Itens */}
-        <Card title="Itens">
-          {bill.items.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">Nenhum item ainda.</p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {bill.items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <span className="font-semibold text-gray-900">{item.name}</span>
-                    <span className="ml-2 text-sm text-gray-500">x{item.quantity}</span>
+        <div className={desk.stack}>
+          <PaperSlip title="Participantes">
+            {bill.participants.length === 0 ? (
+              <p className={codeStyles.empty}>Nenhum participante ainda.</p>
+            ) : (
+              <div className={codeStyles.rows}>
+                {bill.participants.map((participant) => (
+                  <div key={participantResolvedId(participant)} className={codeStyles.row}>
+                    <span className={codeStyles.rowName}>{participant.name}</span>
                   </div>
-                  <div className="text-right shrink-0">
-                    <span className="font-bold text-primary-600">{formatCurrency(item.value)}</span>
-                    <p className="text-xs text-gray-500">
-                      total: {formatCurrency(item.value * item.quantity)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
+                ))}
+              </div>
+            )}
+          </PaperSlip>
 
-        {/* Resumo financeiro */}
-        {bill.participants.length > 0 && bill.items.length > 0 && (
-          <>
-            <BillParticipantSummary bill={bill} />
-            <ServiceFeeCard bill={bill} />
-            <BillItemDetailedCalc bill={bill} />
-          </>
-        )}
+          <PaperSlip title="Itens">
+            {bill.items.length === 0 ? (
+              <p className={codeStyles.empty}>Nenhum item ainda.</p>
+            ) : (
+              <div className={codeStyles.rows}>
+                {bill.items.map((item) => (
+                  <div key={item.id} className={codeStyles.row}>
+                    <div className={codeStyles.rowMain}>
+                      <span className={codeStyles.rowName}>{item.name}</span>
+                      <span className={codeStyles.qty}>x{item.quantity}</span>
+                    </div>
+                    <div className={codeStyles.price}>
+                      {formatCurrency(item.value)}
+                      <p className={codeStyles.lineTotal}>total: {formatCurrency(item.value * item.quantity)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </PaperSlip>
+
+          {bill.participants.length > 0 && bill.items.length > 0 && (
+            <>
+              <BillParticipantSummary bill={bill} paper />
+              <ServiceFeeCard bill={bill} paper />
+              <BillItemDetailedCalc bill={bill} paper />
+            </>
+          )}
+        </div>
       </main>
       <AppFooter />
     </div>
