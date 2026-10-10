@@ -2,33 +2,10 @@
   --ink: #0c2919;
   --pine: #297747;
   --paper: #f7ede0;
-  --r-slip-card-x: 10%;
-  --r-slip-card-y: 0%;
-  --r-slip-card-w: 40%;
-  --r-slip-card-h: 100%;
-  --r-friends-x: 13%;
-  --r-friends-y: 16%;
-  --r-friends-w: 34%;
-  --r-friends-h: 42%;
-  --r-slip-title-x: 16.09%;
-  --r-slip-title-y: 10%;
-  --r-slip-title-w: 25.31%;
-  --r-slip-title-h: 5%;
-  --r-slip-title-font: 26;
-  --r-slip-items-x: 12.81%;
-  --r-slip-items-y: 60%;
-  --r-slip-items-w: 17.19%;
-  --r-slip-items-h: 10%;
-  --r-slip-items-font: 16;
-  --r-slip-people-x: 12.81%;
-  --r-slip-people-y: 70%;
-  --r-slip-people-w: 22.03%;
-  --r-slip-people-h: 15%;
-  --r-slip-people-font: 15;
-  --r-code-link-x: 12.81%;
-  --r-code-link-y: 85%;
-  --r-code-link-w: 10.78%;
-  --r-code-link-h: 5%;
+  --r-friends-x: 6%;
+  --r-friends-y: 12%;
+  --r-friends-w: 42%;
+  --r-friends-h: 76%;
   --r-wordmark-x: 53.28%;
   --r-wordmark-y: 16.67%;
   --r-wordmark-w: 15%;
@@ -59,16 +36,7 @@
   color: var(--ink);
 }
 
-.comanda {
-  position: absolute;
-  inset: 0;
-}
-
-.plate,
-.slipTitle,
-.slipItems,
-.slipPeople,
-.codeLink,
+.friends,
 .wordmark,
 .headline,
 .subcopy,
@@ -77,87 +45,22 @@
   margin: 0;
 }
 
-.slipCard {
-  left: var(--r-slip-card-x);
-  top: var(--r-slip-card-y);
-  width: var(--r-slip-card-w);
-  height: var(--r-slip-card-h);
-}
-
 .friends {
   left: var(--r-friends-x);
   top: var(--r-friends-y);
   width: var(--r-friends-w);
   height: var(--r-friends-h);
-  z-index: 1;
 }
 
-.plate img {
+.friends img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center;
 }
 
-.slipCard img {
-  object-fit: fill;
-  object-position: center bottom;
-}
-
-.slipTitle {
-  left: var(--r-slip-title-x);
-  top: var(--r-slip-title-y);
-  width: var(--r-slip-title-w);
-  height: var(--r-slip-title-h);
-  z-index: 2;
-  font-family: var(--font-cantata), 'Cantata One', serif;
-  font-size: calc(var(--r-slip-title-font) * 100cqi / 1280);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-
-.slipItems,
-.slipPeople {
-  z-index: 2;
-  font-size: calc(var(--r-slip-items-font) * 100cqi / 1280);
-  line-height: 1.35;
-}
-
-.slipItems {
-  left: var(--r-slip-items-x);
-  top: var(--r-slip-items-y);
-  width: var(--r-slip-items-w);
-  height: var(--r-slip-items-h);
-}
-
-.slipPeople {
-  left: var(--r-slip-people-x);
-  top: var(--r-slip-people-y);
-  width: var(--r-slip-people-w);
-  height: var(--r-slip-people-h);
-  font-size: calc(var(--r-slip-people-font) * 100cqi / 1280);
-}
-
-.slipPeople p,
-.slipItems p,
 .subcopy p {
   margin: 0;
-}
-
-.codeLink {
-  left: var(--r-code-link-x);
-  top: var(--r-code-link-y);
-  width: var(--r-code-link-w);
-  height: var(--r-code-link-h);
-  z-index: 2;
-  color: var(--ink);
-  font-size: calc(16 * 100cqi / 1280);
-  line-height: 1.2;
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-  white-space: nowrap;
 }
 
 .wordmark {
@@ -217,8 +120,7 @@
   background: #1f6338;
 }
 
-.create:focus-visible,
-.codeLink:focus-visible {
+.create:focus-visible {
   outline: 2px solid var(--pine);
   outline-offset: 3px;
 }
@@ -235,6 +137,7 @@
     overflow-x: clip;
   }
 
+  .friends,
   .wordmark,
   .headline,
   .subcopy,
@@ -247,115 +150,37 @@
     white-space: normal;
   }
 
-  .comanda {
-    position: relative;
-    inset: auto;
-    order: 5;
-    display: flex;
-    flex-direction: column;
+  .friends {
+    order: 1;
     width: min(100%, 22rem);
-    max-width: 100%;
     align-self: center;
-    /* A arte tem mais margem vazia à direita; este deslocamento centra a área branca. */
-    transform: translateX(4.75%);
-    min-width: 0;
-    box-sizing: border-box;
-    padding: 2.15rem 2.85rem 3.6rem 1.7rem;
-    gap: 0.35rem;
-  }
-
-  .slipCard {
-    display: block;
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  .slipCard img {
-    width: 100%;
-    height: 100%;
-    object-fit: fill;
-  }
-
-  .friends,
-  .slipTitle,
-  .slipItems,
-  .slipPeople,
-  .codeLink {
-    position: relative;
-    left: auto;
-    top: auto;
-    right: auto;
-    bottom: auto;
-    z-index: 1;
-    width: 100%;
-    height: auto;
-    max-width: 100%;
-    min-width: 0;
-    white-space: normal;
   }
 
   .friends img {
     width: 100%;
     height: auto;
-    object-fit: contain;
-  }
-
-  .slipTitle {
-    order: 1;
-    font-size: 1.15rem;
-    line-height: 1.15;
-    text-align: center;
-  }
-
-  .friends {
-    order: 2;
-  }
-
-  .slipItems,
-  .slipPeople {
-    font-size: 0.95rem;
-  }
-
-  .slipItems {
-    order: 3;
-  }
-
-  .slipPeople {
-    order: 4;
-    margin-top: 0.15rem;
-  }
-
-  .codeLink {
-    order: 5;
-    width: fit-content;
-    margin-top: 0.55rem;
-    font-size: 0.95rem;
   }
 
   .wordmark {
-    order: 1;
+    order: 2;
     font-size: 1.35rem;
   }
 
   .headline {
-    order: 2;
+    order: 3;
     font-size: 1.9rem;
     line-height: 1.05;
     white-space: normal;
   }
 
   .subcopy {
-    order: 3;
+    order: 4;
     font-size: 1rem;
     line-height: 1.4;
   }
 
   .create {
-    order: 4;
+    order: 5;
     width: 100%;
     min-height: 3.25rem;
     font-size: 1.05rem;
